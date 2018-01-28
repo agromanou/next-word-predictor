@@ -73,7 +73,7 @@ if __name__ == "__main__":
     en_data = load_dataset()
 
     en_sentences = split_to_sentences(en_data)
-    train, dev, test = split_in_train_dev_dest(en_sentences)
+    train, dev, test = split_in_train_dev_test(en_sentences)
 
     for sentence in train[:10]:
         print(sentence.strip(), end='\n\n')
