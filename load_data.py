@@ -18,13 +18,14 @@ def split_to_sentences(data):
     return sentences
 
 
-def split_in_train_dev_dest(sentences, seed=1234, dev_size=0.20, test_size=.10, save_datasets=False):
+def split_in_train_dev_test(sentences, seed=1234, dev_size=0.20, test_size=.10, save_data=False):
     """
 
     :param sentences:
     :param seed:
     :param dev_size:
     :param test_size:
+    :param save_data:
     :return:
     """
     # setting the seed in order to be able to reproduce results.
@@ -42,7 +43,7 @@ def split_in_train_dev_dest(sentences, seed=1234, dev_size=0.20, test_size=.10, 
     dev_data = sentences[train_sentences_size:train_sentences_size + dev_sentences_size]
     test_data = sentences[train_sentences_size + dev_sentences_size:]
 
-    if save_datasets:
+    if save_data:
         train_df = pd.DataFrame(train_data, columns=['text'])
         dev_df = pd.DataFrame(dev_data, columns=['text'])
         test_df = pd.DataFrame(test_data, columns=['text'])
