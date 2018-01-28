@@ -102,3 +102,6 @@ ENV/
 
 # IDE stuff
 .idea
+
+# data files
+data/
