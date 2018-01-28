@@ -13,9 +13,9 @@ def split_to_sentences(data):
     :param data:
     :return:
     """
-    sentences = data.split('.')
+    sentences = map(lambda s: s.strip(), data.split('.'))
 
-    return sentences
+    return list(sentences)
 
 
 def split_in_train_dev_test(sentences, seed=1234, dev_size=0.20, test_size=.10, save_data=False):
@@ -73,7 +73,7 @@ if __name__ == "__main__":
     en_data = load_dataset()
 
     en_sentences = split_to_sentences(en_data)
-    train, dev, test = split_in_train_dev_test(en_sentences)
+    train, dev, test = split_in_train_dev_test(en_sentences, save_data=True)
 
     for sentence in train[:10]:
         print(sentence.strip(), end='\n\n')
