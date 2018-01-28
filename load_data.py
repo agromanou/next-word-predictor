@@ -17,5 +17,8 @@ def load_dataset():
     return dataset
 
 
-if __name__ == "_main__":
+if __name__ == "__main__":
+
     data = load_dataset()
+
+    print(data)
