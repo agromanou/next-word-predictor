@@ -3,7 +3,7 @@ from collections import Counter
 import numpy as np
 import pandas as pd
 from numpy import random
-from __init__ import DATA_DIR
+from Assignment1 import DATA_DIR
 
 
 def split_to_sentences(data):

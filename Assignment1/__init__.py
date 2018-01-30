@@ -2,9 +2,6 @@ import logging
 from logging import handlers
 import os
 
-__all__ = [
-    'Assignment1'
-]
 
 def setup_logger(name):
     """
