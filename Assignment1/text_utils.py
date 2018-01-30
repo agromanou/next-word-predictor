@@ -64,16 +64,6 @@ class TextUtils:
         :param n:
         :return:
         """
-
         assert n in [2, 3]
 
-        if n == 2:
-            for num in range(1, len(seq)):
-                yield (seq[num - 1], seq[num])
-
-        elif n == 3:
-            for num in range(2, len(seq)):
-                yield (seq[num - 2], seq[num - 1], seq[num])
-
-        else:
-            raise Exception('N is invalid. Choose 2 or 3')
+        return [seq[i:i + n] for i in range(len(seq) - n + 1)]
