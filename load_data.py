@@ -34,11 +34,13 @@ def split_in_train_dev_test(sentences, seed=1234, dev_size=0.20, test_size=.10, 
     # shuffling the list of sentences.
     random.shuffle(sentences)
 
+    # calculating the ratios in actual numbers
     total_len = len(sentences)
     dev_sentences_size = int(total_len * dev_size)
     test_sentences_size = int(total_len * test_size)
     train_sentences_size = total_len - dev_sentences_size - test_sentences_size
 
+    # splitting the data to train, development and test
     train_data = sentences[:train_sentences_size]
     dev_data = sentences[train_sentences_size:train_sentences_size + dev_sentences_size]
     test_data = sentences[train_sentences_size + dev_sentences_size:]
