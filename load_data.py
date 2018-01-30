@@ -1,5 +1,5 @@
 import os
-
+from collections import Counter
 import numpy as np
 import pandas as pd
 from numpy import random
@@ -18,14 +18,14 @@ def split_to_sentences(data):
     return list(sentences)
 
 
-def tokenize_and_pad(sentence, model_type='bigram'):
+def tokenize_and_pad(sentence, model_type='simple'):
     """
 
     :param sentence:
     :param model_type:
     :return:
     """
-    assert model_type in ['bigram', 'trigram']
+    assert model_type in ['bigram', 'trigram', 'simple']
 
     words = sentence.split()
 
@@ -94,8 +94,27 @@ def load_dataset():
     return dataset
 
 
-if __name__ == "__main__":
+def create_vocabulary(sentences, base_limit=2):
+    """
+    This method counts all the tokens from a list of sentences. Then it creates a vocabulary with the most common
+    tokens, that surpass the base limit.
+    :param sentences: list. A list of strings.
+    :param base_limit: int. A number defining the base limit for the validity of the tokens.
+    :return: dict. A dictionary with the vocabulary and the rejected tokens
+    """
+    # grab all the tokens in an iterator. Not in a list.
+    tokens = (token for sentence in sentences for token in tokenize_and_pad(sentence, model_type='simple'))
 
+    tokens_count = Counter(tokens)
+
+    valid_tokens = {k: v for k, v in tokens_count.items() if v > base_limit}
+    invalid_tokens = {k: v for k, v in tokens_count.items() if v <= base_limit}
+
+    return dict(vocabulary=valid_tokens,
+                rejected=invalid_tokens)
+
+
+if __name__ == "__main__":
     # en_data = load_dataset()
     #
     # en_sentences = split_to_sentences(en_data)
@@ -104,7 +123,14 @@ if __name__ == "__main__":
     # for sentence in train[:10]:
     #     print(sentence.strip(), end='\n\n')
 
-    sntns = "This is a sentence"
+    a_sentence = "This is a sentence"
 
-    res = tokenize_and_pad(sntns)
+    some_sentences = ["This is a sentence",
+                      "This is another sentence",
+                      "This is new fucking awesome sentence"]
+
+    res = tokenize_and_pad(a_sentence)
     print(res)
+
+    counts = create_vocabulary(some_sentences)
+    print(counts)
