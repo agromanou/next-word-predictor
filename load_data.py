@@ -18,7 +18,31 @@ def split_to_sentences(data):
     return list(sentences)
 
 
-def split_in_train_dev_test(sentences, seed=1234, dev_size=0.20, test_size=.10, save_data=False):
+def tokenize_and_pad(sentence, model_type='bigram'):
+    """
+
+    :param sentence:
+    :param model_type:
+    :return:
+    """
+    assert model_type in ['bigram', 'trigram']
+
+    words = sentence.split()
+
+    if model_type == 'bigram':
+        return ['Start1'] + words + ['End1']
+
+    elif model_type == 'trigram':
+        return ['Start1', 'Start2'] + words + ['End1', 'End2']
+
+    return words
+
+
+def split_in_train_dev_test(sentences,
+                            seed=1234,
+                            dev_size=0.20,
+                            test_size=.10,
+                            save_data=False):
     """
 
     :param sentences:
@@ -72,10 +96,15 @@ def load_dataset():
 
 if __name__ == "__main__":
 
-    en_data = load_dataset()
+    # en_data = load_dataset()
+    #
+    # en_sentences = split_to_sentences(en_data)
+    # train, dev, test = split_in_train_dev_test(en_sentences, save_data=True)
+    #
+    # for sentence in train[:10]:
+    #     print(sentence.strip(), end='\n\n')
 
-    en_sentences = split_to_sentences(en_data)
-    train, dev, test = split_in_train_dev_test(en_sentences, save_data=True)
+    sntns = "This is a sentence"
 
-    for sentence in train[:10]:
-        print(sentence.strip(), end='\n\n')
+    res = tokenize_and_pad(sntns)
+    print(res)
