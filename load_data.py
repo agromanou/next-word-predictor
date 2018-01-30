@@ -113,6 +113,28 @@ def create_vocabulary(sentences, base_limit=2):
                 rejected=invalid_tokens)
 
 
+def create_ngrams(seq, n):
+    """
+
+    :param seq:
+    :param n:
+    :return:
+    """
+
+    assert n in [2, 3]
+
+    if n == 2:
+        for num in range(1, len(seq)):
+            yield (seq[num - 1], seq[num])
+
+    elif n == 3:
+        for num in range(2, len(seq)):
+            yield (seq[num - 2], seq[num - 1], seq[num])
+
+    else:
+        raise Exception('N is invalid. Choose 2 or 3')
+
+
 if __name__ == "__main__":
     # en_data = load_dataset()
     #
@@ -122,7 +144,7 @@ if __name__ == "__main__":
     # for sentence in train[:10]:
     #     print(sentence.strip(), end='\n\n')
 
-    a_sentence = "This is a sentence"
+    a_sentence = "This is a quite large sentence"
 
     some_sentences = ["This is a sentence",
                       "This is another sentence",
@@ -133,3 +155,6 @@ if __name__ == "__main__":
 
     counts = create_vocabulary(some_sentences)
     print(counts)
+
+    for i in create_ngrams(a_sentence.split(), 3):
+        print(i)
