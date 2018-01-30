@@ -11,6 +11,24 @@ class TextUtilsTest(unittest.TestCase):
     def tearDown(self):
         pass
 
+    def test_split_to_sentences_normal_execution(self):
+        corpus = "These are. 3. Sentences."
+        exp_outcome = ["These are", "3", "Sentences"]
+        sentences = self.theTextUnitObject.split_to_sentences(corpus)
+
+        self.assertEqual(len(sentences), len(exp_outcome))
+        self.assertEqual(type(sentences), type(exp_outcome))
+        self.assertListEqual(sentences, exp_outcome)
+
+    def test_split_to_sentences_with_empty_corpus(self):
+        corpus = ""
+        exp_outcome = []
+        sentences = self.theTextUnitObject.split_to_sentences(corpus)
+
+        self.assertEqual(len(sentences), len(exp_outcome))
+        self.assertEqual(type(sentences), type(exp_outcome))
+        self.assertListEqual(sentences, exp_outcome)
+
     def test_create_ngrams_with_2_n(self):
         sentence = "This is a quite large sentence"
         exp_outcome = [['This', 'is'],
@@ -22,7 +40,7 @@ class TextUtilsTest(unittest.TestCase):
 
         ngrams = self.theTextUnitObject.create_ngrams(sentence.split(), 2)
 
-        self.assertEqual(len(ngrams), 5)
+        self.assertEqual(len(ngrams), len(exp_outcome))
         self.assertEqual(type(ngrams), type(exp_outcome))
         self.assertListEqual(ngrams, exp_outcome)
 
@@ -36,7 +54,7 @@ class TextUtilsTest(unittest.TestCase):
 
         ngrams = self.theTextUnitObject.create_ngrams(sentence.split(), 3)
 
-        self.assertEqual(len(ngrams), 4)
+        self.assertEqual(len(ngrams), len(exp_outcome))
         self.assertEqual(type(ngrams), type(exp_outcome))
         self.assertListEqual(ngrams, exp_outcome)
 
@@ -44,3 +62,4 @@ class TextUtilsTest(unittest.TestCase):
         sentence = ""
         self.assertRaises(AssertionError, self.theTextUnitObject.create_ngrams, sentence.split, 1)
         self.assertRaises(AssertionError, self.theTextUnitObject.create_ngrams, sentence.split, 5)
+
