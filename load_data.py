@@ -3,8 +3,7 @@ from collections import Counter
 import numpy as np
 import pandas as pd
 from numpy import random
-
-DATA_DIR = "{}{}{}{}".format(os.getcwd(), os.sep, 'data', os.sep)
+from __init__ import DATA_DIR
 
 
 def split_to_sentences(data):
@@ -20,10 +19,10 @@ def split_to_sentences(data):
 
 def tokenize_and_pad(sentence, model_type='simple'):
     """
-
-    :param sentence:
-    :param model_type:
-    :return:
+    This function splits a sentence into tokens. Padding is added if necessary according the model type.
+    :param sentence: str.
+    :param model_type: str. Enum of bigram, trigram, simple
+    :return: list. An iterable of word tokens.
     """
     assert model_type in ['bigram', 'trigram', 'simple']
 
@@ -124,8 +123,6 @@ if __name__ == "__main__":
     #     print(sentence.strip(), end='\n\n')
 
     a_sentence = "This is a sentence"
-    train = load_train_dataset()
-    train['tokens'] = train.text.apply(split_to_tokens)
 
     some_sentences = ["This is a sentence",
                       "This is another sentence",
@@ -133,7 +130,6 @@ if __name__ == "__main__":
 
     res = tokenize_and_pad(a_sentence)
     print(res)
-    print(create_ngrams(pad_list(train['tokens'].iloc[1])))
 
     counts = create_vocabulary(some_sentences)
     print(counts)
