@@ -18,6 +18,45 @@ def split_to_sentences(data):
     return list(sentences)
 
 
+def pad_list(sentence, ngram_type='bigram'):
+    """
+
+    :param sentence:
+    :param ngram_type:
+    :return:
+    """
+    assert ngram_type in ['bigram', 'trigram']
+
+    if ngram_type == 'bigram':
+        return ['$'] + sentence + ['#']
+
+    else:
+        return ['$', '$'] + sentence + ['#', '#']
+
+
+def create_ngrams(tokens, ngram_type='bigram'):
+    """
+
+    :param tokens:
+    :param ngram_type:
+    :return:
+    """
+    assert ngram_type in ['bigram','trigram']
+
+    if ngram_type == 'bigram':
+        for i in range(1, len(tokens)):
+            print((tokens[i-1], tokens[i]))
+
+
+def split_to_tokens(sentence):
+    """
+
+    :param sentence:
+    :return:
+    """
+    return sentence.split()
+
+
 def split_in_train_dev_test(sentences, seed=1234, dev_size=0.20, test_size=.10, save_data=False):
     """
 
@@ -68,12 +107,26 @@ def load_dataset():
     return dataset
 
 
+def load_train_dataset():
+    """
+
+    :return:
+    """
+    df = pd.read_csv(DATA_DIR + 'europarl_train.csv')
+
+    return df
+
+
 if __name__ == "__main__":
+    # en_data = load_dataset()
+    #
+    # en_sentences = split_to_sentences(en_data)
+    # train, dev, test = split_in_train_dev_test(en_sentences, save_data=True)
+    #
+    # for sentence in train[:10]:
+    #     print(sentence.strip(), end='\n\n')
 
-    en_data = load_dataset()
+    train = load_train_dataset()
+    train['tokens'] = train.text.apply(split_to_tokens)
 
-    en_sentences = split_to_sentences(en_data)
-    train, dev, test = split_in_train_dev_test(en_sentences, save_data=True)
-
-    for sentence in train[:10]:
-        print(sentence.strip(), end='\n\n')
+    print(create_ngrams(pad_list(train['tokens'].iloc[1])))
