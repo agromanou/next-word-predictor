@@ -2,6 +2,7 @@ import logging
 from logging import handlers
 import os
 
+
 def setup_logger(name, level='INFO'):
     """
 
@@ -46,5 +47,6 @@ def setup_logger(name, level='INFO'):
     logger.addHandler(stream_handler)
 
     return logger
+
 
 DATA_DIR = "{}{}{}{}".format(os.getcwd(), os.sep, 'data', os.sep)
