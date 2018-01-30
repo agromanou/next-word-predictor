@@ -1,12 +1,12 @@
-from Assignment1.text_utils import TextUtils
+from Assignment1.preprocess import Preprocessor
 
 import unittest
 
 
-class TextUtilsTest(unittest.TestCase):
+class PreprocessorTest(unittest.TestCase):
 
     def setUp(self):
-        self.theTextUnitObject = TextUtils()
+        self.thePreprocessorObject = Preprocessor()
 
     def tearDown(self):
         pass
@@ -14,7 +14,7 @@ class TextUtilsTest(unittest.TestCase):
     def test_split_to_sentences_normal_execution(self):
         corpus = "These are. 3. Sentences."
         exp_outcome = ["These are", "3", "Sentences"]
-        sentences = self.theTextUnitObject.split_to_sentences(corpus)
+        sentences = self.thePreprocessorObject.split_to_sentences(corpus)
 
         self.assertEqual(len(sentences), len(exp_outcome))
         self.assertEqual(type(sentences), type(exp_outcome))
@@ -23,7 +23,7 @@ class TextUtilsTest(unittest.TestCase):
     def test_split_to_sentences_with_empty_corpus(self):
         corpus = ""
         exp_outcome = []
-        sentences = self.theTextUnitObject.split_to_sentences(corpus)
+        sentences = self.thePreprocessorObject.split_to_sentences(corpus)
 
         self.assertEqual(len(sentences), len(exp_outcome))
         self.assertEqual(type(sentences), type(exp_outcome))
@@ -38,7 +38,7 @@ class TextUtilsTest(unittest.TestCase):
                        ['large', 'sentence']]
         print(sentence)
 
-        ngrams = self.theTextUnitObject.create_ngrams(sentence.split(), 2)
+        ngrams = self.thePreprocessorObject.create_ngrams(sentence.split(), 2)
 
         self.assertEqual(len(ngrams), len(exp_outcome))
         self.assertEqual(type(ngrams), type(exp_outcome))
@@ -52,7 +52,7 @@ class TextUtilsTest(unittest.TestCase):
                        ['quite', 'large', 'sentence']]
         print(sentence)
 
-        ngrams = self.theTextUnitObject.create_ngrams(sentence.split(), 3)
+        ngrams = self.thePreprocessorObject.create_ngrams(sentence.split(), 3)
 
         self.assertEqual(len(ngrams), len(exp_outcome))
         self.assertEqual(type(ngrams), type(exp_outcome))
@@ -60,6 +60,6 @@ class TextUtilsTest(unittest.TestCase):
 
     def test_create_ngram_with_invalid_n(self):
         sentence = ""
-        self.assertRaises(AssertionError, self.theTextUnitObject.create_ngrams, sentence.split, 1)
-        self.assertRaises(AssertionError, self.theTextUnitObject.create_ngrams, sentence.split, 5)
+        self.assertRaises(AssertionError, self.thePreprocessorObject.create_ngrams, sentence.split, 1)
+        self.assertRaises(AssertionError, self.thePreprocessorObject.create_ngrams, sentence.split, 5)
 

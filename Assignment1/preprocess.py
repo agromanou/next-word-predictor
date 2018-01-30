@@ -1,10 +1,10 @@
 from collections import Counter
 
 
-class TextUtils:
+class Preprocessor(object):
 
     def __init__(self):
-        pass
+        self.vocabulary = None
 
     @staticmethod
     def split_to_sentences(data):
@@ -60,11 +60,15 @@ class TextUtils:
     @staticmethod
     def create_ngrams(seq, n):
         """
-
-        :param seq:
-        :param n:
-        :return:
+        This method creates a list with ngrams from a given sentence.
+        :param seq: The given sentence.
+        :param n: The length of word tuples
+        :return: The n-gram tuples for a given sentence.
         """
         assert n in [2, 3]
 
         return [seq[i:i + n] for i in range(len(seq) - n + 1)]
+
+
+if __name__ == '__main__':
+    pass

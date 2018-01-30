@@ -1,12 +1,11 @@
 from Assignment1 import DATA_DIR
-from Assignment1.text_utils import TextUtils
 
 import numpy as np
 import pandas as pd
 from numpy import random
 
 
-class DataFetcher:
+class Fetcher(object):
 
     def __init__(self, file, language):
         self.file = file
@@ -14,8 +13,6 @@ class DataFetcher:
         self.train_data = None
         self.test_data = None
         self.dev_data = None
-        self.vocabulary = None
-        self.tokens = None
 
     def load_dataset(self):
         """
@@ -73,35 +70,5 @@ class DataFetcher:
         self.test_data = test_data
         self.dev_data = test_data
 
-
 if __name__ == "__main__":
-
-    utils = TextUtils()
-    dl = DataFetcher('europarl-v7.el-en.', 'en')
-
-    # Load data & split sentences
-    en_data = dl.load_dataset()
-    en_sentences = utils.split_to_sentences(en_data)
-
-    # Split data into train, dev and test
-    dl.split_in_train_dev_test(en_sentences, save_data=True)
-    train, dev, test = dl.train_data, dl.dev_data, dl.test_data
-
-    for sentence in train[:10]:
-        print(sentence.strip(), end='\n\n')
-
-    a_sentence = "This is a quite large sentence"
-
-    some_sentences = ["This is a sentence",
-                      "This is another sentence",
-                      "This is new fucking awesome sentence"]
-
-    # Tokenize sentences
-    res = utils.tokenize_and_pad(a_sentence)
-
-    # Create vocabulary
-    counts = utils.create_vocabulary(some_sentences)
-
-    # Create n-grams
-    for i in utils.create_ngrams(a_sentence.split(), 3):
-        print(i)
+    pass
