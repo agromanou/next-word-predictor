@@ -2,8 +2,11 @@ import logging
 from logging import handlers
 import os
 
+__all__ = [
+    'Assignment1'
+]
 
-def setup_logger(name, level='INFO'):
+def setup_logger(name):
     """
 
     :param name:
@@ -16,13 +19,7 @@ def setup_logger(name, level='INFO'):
         '%(asctime)s - PID:%(process)d - %(name)s.py:%(funcName)s:%(lineno)d - %(levelname)s - %(message)s')
 
     logger = logging.getLogger(name)
-
-    if level == "ERROR":
-        logger.setLevel(logging.ERROR)
-    elif level == "DEBUG":
-        logger.setLevel(logging.DEBUG)
-    else:
-        logger.setLevel(logging.INFO)
+    logger.setLevel(logging.INFO)
 
     # create INFO file handler
     file_handler = handlers.RotatingFileHandler('{}.log'.format(name),
