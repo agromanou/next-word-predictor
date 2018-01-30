@@ -1,5 +1,5 @@
 import os
-
+from collections import Counter
 import numpy as np
 import pandas as pd
 from numpy import random
@@ -18,46 +18,31 @@ def split_to_sentences(data):
     return list(sentences)
 
 
-def pad_list(sentence, ngram_type='bigram'):
+def tokenize_and_pad(sentence, model_type='simple'):
     """
 
     :param sentence:
-    :param ngram_type:
+    :param model_type:
     :return:
     """
-    assert ngram_type in ['bigram', 'trigram']
+    assert model_type in ['bigram', 'trigram', 'simple']
 
-    if ngram_type == 'bigram':
-        return ['$'] + sentence + ['#']
+    words = sentence.split()
 
-    else:
-        return ['$', '$'] + sentence + ['#', '#']
+    if model_type == 'bigram':
+        return ['Start1'] + words + ['End1']
 
+    elif model_type == 'trigram':
+        return ['Start1', 'Start2'] + words + ['End1', 'End2']
 
-def create_ngrams(tokens, ngram_type='bigram'):
-    """
-
-    :param tokens:
-    :param ngram_type:
-    :return:
-    """
-    assert ngram_type in ['bigram','trigram']
-
-    if ngram_type == 'bigram':
-        for i in range(1, len(tokens)):
-            print((tokens[i-1], tokens[i]))
+    return words
 
 
-def split_to_tokens(sentence):
-    """
-
-    :param sentence:
-    :return:
-    """
-    return sentence.split()
-
-
-def split_in_train_dev_test(sentences, seed=1234, dev_size=0.20, test_size=.10, save_data=False):
+def split_in_train_dev_test(sentences,
+                            seed=1234,
+                            dev_size=0.20,
+                            test_size=.10,
+                            save_data=False):
     """
 
     :param sentences:
@@ -73,11 +58,13 @@ def split_in_train_dev_test(sentences, seed=1234, dev_size=0.20, test_size=.10, 
     # shuffling the list of sentences.
     random.shuffle(sentences)
 
+    # calculating the ratios in actual numbers
     total_len = len(sentences)
     dev_sentences_size = int(total_len * dev_size)
     test_sentences_size = int(total_len * test_size)
     train_sentences_size = total_len - dev_sentences_size - test_sentences_size
 
+    # splitting the data to train, development and test
     train_data = sentences[:train_sentences_size]
     dev_data = sentences[train_sentences_size:train_sentences_size + dev_sentences_size]
     test_data = sentences[train_sentences_size + dev_sentences_size:]
@@ -107,14 +94,24 @@ def load_dataset():
     return dataset
 
 
-def load_train_dataset():
+def create_vocabulary(sentences, base_limit=2):
     """
-
-    :return:
+    This method counts all the tokens from a list of sentences. Then it creates a vocabulary with the most common
+    tokens, that surpass the base limit.
+    :param sentences: list. A list of strings.
+    :param base_limit: int. A number defining the base limit for the validity of the tokens.
+    :return: dict. A dictionary with the vocabulary and the rejected tokens
     """
-    df = pd.read_csv(DATA_DIR + 'europarl_train.csv')
+    # grab all the tokens in an iterator. Not in a list.
+    tokens = (token for sentence in sentences for token in tokenize_and_pad(sentence, model_type='simple'))
 
-    return df
+    tokens_count = Counter(tokens)
+
+    valid_tokens = {k: v for k, v in tokens_count.items() if v > base_limit}
+    invalid_tokens = {k: v for k, v in tokens_count.items() if v <= base_limit}
+
+    return dict(vocabulary=valid_tokens,
+                rejected=invalid_tokens)
 
 
 if __name__ == "__main__":
@@ -126,7 +123,17 @@ if __name__ == "__main__":
     # for sentence in train[:10]:
     #     print(sentence.strip(), end='\n\n')
 
+    a_sentence = "This is a sentence"
     train = load_train_dataset()
     train['tokens'] = train.text.apply(split_to_tokens)
 
+    some_sentences = ["This is a sentence",
+                      "This is another sentence",
+                      "This is new fucking awesome sentence"]
+
+    res = tokenize_and_pad(a_sentence)
+    print(res)
     print(create_ngrams(pad_list(train['tokens'].iloc[1])))
+
+    counts = create_vocabulary(some_sentences)
+    print(counts)
