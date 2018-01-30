@@ -13,9 +13,10 @@ class TextUtils:
         :param data:
         :return:
         """
-        sentences = map(lambda s: s.strip(), data.split('.'))
+        sentences = list(map(lambda s: s.strip(), data.split('.')))
+        filtered = list(filter(lambda x: x != '', sentences))
 
-        return list(sentences)
+        return filtered
 
     @staticmethod
     def tokenize_and_pad(sentence, model_type='simple'):
