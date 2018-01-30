@@ -43,4 +43,5 @@ def setup_logger(name):
     return logger
 
 
-DATA_DIR = "{}{}{}{}".format(os.getcwd(), os.sep, 'data', os.sep)
+PARENT_DIRECTORY = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
+DATA_DIR = "{}{}{}{}".format(PARENT_DIRECTORY, os.sep, 'data', os.sep)
