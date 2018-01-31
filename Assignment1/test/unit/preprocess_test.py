@@ -94,7 +94,6 @@ class PreprocessorTest(unittest.TestCase):
 
         :return:
         """
-        sentence = ""
-        self.assertRaises(AssertionError, self.thePreprocessorObject.create_ngrams, sentence.split, 0)
-        self.assertRaises(AssertionError, self.thePreprocessorObject.create_ngrams, sentence.split, 5)
-
+        sentence = "This is a quite large sentence"
+        self.assertRaises(AssertionError, self.thePreprocessorObject.create_ngrams, sentence.split(), 0)
+        self.assertRaises(AssertionError, self.thePreprocessorObject.create_ngrams, sentence.split(), 5)
