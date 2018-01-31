@@ -37,6 +37,21 @@ class PreprocessorTest(unittest.TestCase):
         self.assertEqual(type(sentences), type(exp_outcome))
         self.assertListEqual(sentences, exp_outcome)
 
+    def test_create_ngrams_with_1_n(self):
+        """
+
+        :return:
+        """
+        sentence = "This is a quite large sentence"
+        exp_outcome = [['This'],['is'],['a'], ['quite'], ['large'], ['sentence']]
+        print(sentence)
+
+        ngrams = self.thePreprocessorObject.create_ngrams(sentence.split(), 1)
+
+        self.assertEqual(len(ngrams), len(exp_outcome))
+        self.assertEqual(type(ngrams), type(exp_outcome))
+        self.assertListEqual(ngrams, exp_outcome)
+
     def test_create_ngrams_with_2_n(self):
         """
 
@@ -80,6 +95,6 @@ class PreprocessorTest(unittest.TestCase):
         :return:
         """
         sentence = ""
-        self.assertRaises(AssertionError, self.thePreprocessorObject.create_ngrams, sentence.split, 1)
+        self.assertRaises(AssertionError, self.thePreprocessorObject.create_ngrams, sentence.split, 0)
         self.assertRaises(AssertionError, self.thePreprocessorObject.create_ngrams, sentence.split, 5)
 
