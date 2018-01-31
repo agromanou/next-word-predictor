@@ -2,15 +2,20 @@ from Assignment1.preprocess import Preprocessor
 from Assignment1.data_fetcher import Fetcher
 
 if __name__ == '__main__':
+
     pp = Preprocessor()
-    dl = Fetcher('europarl-v7.el-en.', 'en')
+
+    dl = Fetcher(file='europarl-v7.el-en.',
+                 language='en')
 
     # Load data & split sentences
     en_data = dl.load_dataset()
     en_sentences = pp.split_to_sentences(en_data)
 
     # Split data into train, dev and test
-    dl.split_in_train_dev_test(en_sentences, save_data=True)
+    dl.split_in_train_dev_test(en_sentences,
+                               save_data=True)
+
     train, dev, test = dl.train_data, dl.dev_data, dl.test_data
 
     for sentence in train[:10]:

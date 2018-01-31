@@ -12,6 +12,10 @@ class PreprocessorTest(unittest.TestCase):
         pass
 
     def test_split_to_sentences_normal_execution(self):
+        """
+
+        :return:
+        """
         corpus = "These are. 3. Sentences."
         exp_outcome = ["These are", "3", "Sentences"]
         sentences = self.thePreprocessorObject.split_to_sentences(corpus)
@@ -21,6 +25,10 @@ class PreprocessorTest(unittest.TestCase):
         self.assertListEqual(sentences, exp_outcome)
 
     def test_split_to_sentences_with_empty_corpus(self):
+        """
+
+        :return:
+        """
         corpus = ""
         exp_outcome = []
         sentences = self.thePreprocessorObject.split_to_sentences(corpus)
@@ -30,6 +38,10 @@ class PreprocessorTest(unittest.TestCase):
         self.assertListEqual(sentences, exp_outcome)
 
     def test_create_ngrams_with_2_n(self):
+        """
+
+        :return:
+        """
         sentence = "This is a quite large sentence"
         exp_outcome = [['This', 'is'],
                        ['is', 'a'],
@@ -45,6 +57,10 @@ class PreprocessorTest(unittest.TestCase):
         self.assertListEqual(ngrams, exp_outcome)
 
     def test_create_ngrams_with_3_n(self):
+        """
+
+        :return:
+        """
         sentence = "This is a quite large sentence"
         exp_outcome = [['This', 'is', 'a'],
                        ['is', 'a', 'quite'],
@@ -59,6 +75,10 @@ class PreprocessorTest(unittest.TestCase):
         self.assertListEqual(ngrams, exp_outcome)
 
     def test_create_ngram_with_invalid_n(self):
+        """
+
+        :return:
+        """
         sentence = ""
         self.assertRaises(AssertionError, self.thePreprocessorObject.create_ngrams, sentence.split, 1)
         self.assertRaises(AssertionError, self.thePreprocessorObject.create_ngrams, sentence.split, 5)

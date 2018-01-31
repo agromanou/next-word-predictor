@@ -8,6 +8,11 @@ from numpy import random
 class Fetcher(object):
 
     def __init__(self, file, language):
+        """
+
+        :param file:
+        :param language:
+        """
         self.file = file
         self.language = language
         self.train_data = None
@@ -19,27 +24,29 @@ class Fetcher(object):
         This method loads the english dataset.
         :return:
         """
-        infile = DATA_DIR + self.file + self.language
+        infile = "{0}{1}{2}".format(DATA_DIR, self.file, self.language)
 
         with open(infile, 'rb') as in_file:
             dataset = in_file.read().decode("utf-8")
 
         return dataset
 
-    def split_in_train_dev_test(self, sentences,
+    def split_in_train_dev_test(self,
+                                sentences,
                                 seed=1234,
                                 dev_size=0.20,
                                 test_size=.10,
                                 save_data=False):
         """
 
-        :param sentences:
-        :param seed:
-        :param dev_size:
-        :param test_size:
-        :param save_data:
+        :param sentences: List. An iterable of sentences (strings)
+        :param seed: Int. A number that helps in the reproduction of the samples
+        :param dev_size: Float. The size of the development dataset. Must be in (0, 1)
+        :param test_size: Float. The size of the test dataset. Must be in (0, 1)
+        :param save_data: Bool. Whether we want to save the constructed datasets in .csv form.
         :return:
         """
+
         # setting the seed in order to be able to reproduce results.
         np.random.seed(seed)
 
@@ -69,6 +76,7 @@ class Fetcher(object):
         self.train_data = train_data
         self.test_data = test_data
         self.dev_data = test_data
+
 
 if __name__ == "__main__":
     pass

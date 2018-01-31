@@ -31,10 +31,10 @@ class Preprocessor(object):
         words = sentence.split()
 
         if model_type == 'bigram':
-            return ['Start1'] + words + ['End1']
+            return ['<s1>'] + words + ['</s1>']
 
         elif model_type == 'trigram':
-            return ['Start1', 'Start2'] + words + ['End1', 'End2']
+            return ['<s1>', '<s2>'] + words + ['</s1>', '</s2>']
 
         return words
 
@@ -60,10 +60,11 @@ class Preprocessor(object):
     @staticmethod
     def create_ngrams(seq, n):
         """
-        This method creates a list with ngrams from a given sentence.
+        This method creates a list of ngrams from a given sentence.
+
         :param seq: The given sentence.
         :param n: The length of word tuples
-        :return: The n-gram tuples for a given sentence.
+        :return: The n-grams for a given sentence.
         """
         assert n in [2, 3]
 
