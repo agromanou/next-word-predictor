@@ -32,7 +32,7 @@ class Preprocessor(object):
     @staticmethod
     def tokenize_and_pad(sentence, model_type='simple'):
         """
-        This function splits a sentence into tokens. Padding is added if necessary according the model type.
+        This method splits a sentence into tokens. Padding is added if necessary according the model type.
         :param sentence: str.
         :param model_type: str. Enum of bigram, trigram, simple
         :return: list. An iterable of word tokens.
@@ -49,24 +49,31 @@ class Preprocessor(object):
 
         return words
 
-    def create_vocabulary(self, sentences, base_limit=2):
+    def create_vocabulary(self, sentences, base_limit=10):
         """
         This method counts all the tokens from a list of sentences. Then it creates a vocabulary with the most common
-        tokens, that surpass the base limit.
+        tokens, that surpass the base limit and a rejection vocabulary for the rest.
+
         :param sentences: list. A list of strings.
         :param base_limit: int. A number defining the base limit for the validity of the tokens.
         :return: dict. A dictionary with the vocabulary and the rejected tokens
         """
+
+        logger.info('Creating Vocabulary with base_limit: {}'.format(base_limit))
+
         # grab all the tokens in an iterator. Not in a list.
         tokens = (token for sentence in sentences for token in self.tokenize_and_pad(sentence, model_type='simple'))
 
         tokens_count = Counter(tokens)
 
+        # selecting the valid tokens, and the rejected tokens in separate dictionaries.
         valid_tokens = {k: v for k, v in tokens_count.items() if v > base_limit}
         invalid_tokens = {k: v for k, v in tokens_count.items() if v <= base_limit}
 
-        return dict(vocabulary=valid_tokens,
-                    rejected=invalid_tokens)
+        logger.info('Valid Vocabulary size: {}'.format(len(valid_tokens)))
+        logger.info('Rejection Vocabulary size: {}'.format(len(invalid_tokens)))
+
+        return dict(vocabulary=valid_tokens, rejected=invalid_tokens)
 
     @staticmethod
     def create_ngrams(seq, n):
@@ -84,6 +91,7 @@ class Preprocessor(object):
     def calculate_ngram_counts(self, corpus, model):
         """
         This method calculates all the n-gram counts for a given model.
+
         :param corpus: Str. A text
         :param model: Str. Enum defining the model that we want to use.
         :return: Counter. A python Counter of the word n-grams.
@@ -99,12 +107,14 @@ class Preprocessor(object):
         sentences = self.split_to_sentences(corpus)
 
         # padding each sentence separately in respect to the given model
+        logger.info('Padding each sentence separately in respect to the {} model'.format(model))
         padded_sentences = tuple(map(lambda s: self.tokenize_and_pad(s, model_type=model), sentences))
 
         # calculates all the n-grams up to the models actual n.
         # E.g for trigram, creates uni-grams, bi-grams and tri-grams
         for num in range(1, model_n + 1):
 
+            logger.info("Creating {}-gram tokens for all padded sentences".format(num))
             sentences_ngrams = map(lambda s: self.create_ngrams(s, n=num), padded_sentences)
 
             # appends each n-gram into a list in order to count them.
@@ -112,11 +122,18 @@ class Preprocessor(object):
                 for item in sublist:
                     all_ngrams.append(" ".join(item))
 
+        logger.info('Counting all n-grams')
+
         # counting all the different n-grams.
-        return Counter(all_ngrams)
+        counts = Counter(all_ngrams)
+
+        logger.info('Total n-gram tokens created: {}'.format(len(counts)))
+
+        return counts
 
 
 if __name__ == '__main__':
+
     a_corpus = "The Cape sparrow (Passer melanurus) is a southern African bird. A medium-sized sparrow at 14–16 " \
                "centimetres (5.5–6.3 in), it has distinctive grey, brown, and chestnut plumage, with large pale " \
                "head stripes in both sexes. The male has some bold black and white markings on its head and neck." \
