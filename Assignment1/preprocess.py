@@ -1,5 +1,8 @@
 from collections import Counter
 from pprint import pprint
+from Assignment1 import setup_logger
+
+logger = setup_logger(__name__)
 
 
 class Preprocessor(object):
@@ -10,12 +13,19 @@ class Preprocessor(object):
     @staticmethod
     def split_to_sentences(corpus):
         """
-
-        :param corpus:
-        :return:
+        This method splits a corpus into sentences.
+        :param corpus: str. A textual corpus.
+        :return: List. An iterable of sentences (strings).
         """
+        logger.info('Splitting Corpus into sentences')
+
+        # splitting the corpus in sentences,
+        # and getting rid of the white spaces at the start and end of each sentence
         sentences = list(map(lambda s: s.strip(), corpus.split('.')))
+        # filtering empty sentences
         filtered = list(filter(None, sentences))
+
+        logger.info('Number of sentences extracted: {}'.format(len(filtered)))
 
         return filtered
 
@@ -107,7 +117,6 @@ class Preprocessor(object):
 
 
 if __name__ == '__main__':
-
     a_corpus = "The Cape sparrow (Passer melanurus) is a southern African bird. A medium-sized sparrow at 14–16 " \
                "centimetres (5.5–6.3 in), it has distinctive grey, brown, and chestnut plumage, with large pale " \
                "head stripes in both sexes. The male has some bold black and white markings on its head and neck." \
