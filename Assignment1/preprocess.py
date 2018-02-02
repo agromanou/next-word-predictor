@@ -37,11 +37,19 @@ class Preprocessor(object):
         :param sentences:
         :return:
         """
-        corpus = ""
-        for sentence in sentences:
-            corpus = corpus + sentence
+        # Functional
+        def flatten_iter(i, s, c, l):
+            if i < l:
+                c = c + ". " + s[i]
+                flatten_iter(i+1, s, c, l)
+            return c
 
-        return corpus
+        # Imperative
+        # corpus = ""
+        # for sentence in sentences:
+        #     corpus = corpus + ". " + sentence
+
+        return flatten_iter(0, sentences, "", len(sentences))
 
     @staticmethod
     def tokenize_and_pad(sentence, model_type='simple'):
