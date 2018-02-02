@@ -5,6 +5,7 @@ import pandas as pd
 from numpy import random
 
 logger = setup_logger(__name__)
+logger.disabled = True
 
 
 class Fetcher(object):

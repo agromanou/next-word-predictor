@@ -36,6 +36,9 @@ class Model(object):
         """
         pass
 
+    def mle(self):
+        pass
+
 
 if __name__ == '__main__':
     vocabulary_freq = {"i": 4,

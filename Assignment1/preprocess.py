@@ -3,6 +3,7 @@ from pprint import pprint
 from Assignment1 import setup_logger
 
 logger = setup_logger(__name__)
+logger.disabled = True
 
 
 class Preprocessor(object):
@@ -30,6 +31,19 @@ class Preprocessor(object):
         return filtered
 
     @staticmethod
+    def flatten_to_one_corpus(sentences):
+        """
+
+        :param sentences:
+        :return:
+        """
+        corpus = ""
+        for sentence in sentences:
+            corpus = corpus + sentence
+
+        return corpus
+
+    @staticmethod
     def tokenize_and_pad(sentence, model_type='simple'):
         """
         This method splits a sentence into tokens. Padding is added if necessary according the model type.
@@ -49,20 +63,21 @@ class Preprocessor(object):
 
         return words
 
-    def create_vocabulary(self, sentences, base_limit=10):
+    @staticmethod
+    def create_vocabulary(tokens, base_limit=10):
         """
         This method counts all the tokens from a list of sentences. Then it creates a vocabulary with the most common
         tokens, that surpass the base limit and a rejection vocabulary for the rest.
 
-        :param sentences: list. A list of strings.
+        :param tokens: list. A list of strings.
         :param base_limit: int. A number defining the base limit for the validity of the tokens.
         :return: dict. A dictionary with the vocabulary and the rejected tokens
         """
 
         logger.info('Creating Vocabulary with base_limit: {}'.format(base_limit))
 
-        # grab all the tokens in an iterator. Not in a list.
-        tokens = (token for sentence in sentences for token in self.tokenize_and_pad(sentence, model_type='simple'))
+        # # grab all the tokens in an iterator. Not in a list.
+        # tokens = (token for sentence in sentences for token in self.tokenize_and_pad(sentence, model_type='simple'))
 
         tokens_count = Counter(tokens)
 
