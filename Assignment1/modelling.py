@@ -5,6 +5,16 @@ class Model(object):
         self.tokens = tokens
         self.prob = {}
 
+    @staticmethod
+    def calculate_bayes_probs(grams, voc):
+        """
+        P(w2 | w1) = count(w1, w2) / count(w1)
+        :param ngrams:
+        :param tokens:
+        :return:
+        """
+        return dict(map(lambda p: (p, grams[p] / voc[p.split(" ")[0]]), grams))
+
     def perform_smoothing(self):
         """
 
@@ -41,20 +51,31 @@ class Model(object):
 
 
 if __name__ == '__main__':
+    tokens = ["i", "want", "to", "eat", "chinese", "food", "lunch", "spend",
+              "i", "want", "to", "eat", "chinese", "food", "lunch", "spend",
+              "i", "want", "to", "eat", "chinese", "food", "lunch", "spend",
+              "i", "want", "to", "eat"]
+
     vocabulary_freq = {"i": 4,
                        "want": 4,
                        "to": 4,
                        "eat": 4,
-                       "chinese": 4,
-                       "food": 4,
-                       "lunch": 4,
-                       "spend": 4}
+                       "chinese": 3,
+                       "food": 3,
+                       "lunch": 3,
+                       "spend": 3}
 
-    tokens = ["i", "want", "to", "eat", "chinese", "food", "lunch", "spend",
-              "i", "want", "to", "eat", "chinese", "food", "lunch", "spend",
-              "i", "want", "to", "eat", "chinese", "food", "lunch", "spend",
-              "i", "want", "to", "eat", "chinese", "food", "lunch", "spend"]
+    ngrams = {'i want': 4,
+              'want to': 4,
+              'to eat': 4,
+              'eat chinese': 3,
+              'chinese food': 3,
+              'food lunch': 3,
+              'lunch spend': 3}
 
     modelObj = Model("laplace_smoothing", vocabulary_freq, tokens)
     modelObj.perform_smoothing()
     print(modelObj.prob)
+
+    probs = Model("laplace_smoothing", vocabulary_freq, tokens).calculate_bayes_probs(ngrams, vocabulary_freq)
+    print(probs)

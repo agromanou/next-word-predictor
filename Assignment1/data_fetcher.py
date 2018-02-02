@@ -93,3 +93,7 @@ class Fetcher(object):
         self.train_data = train_data
         self.test_data = test_data
         self.dev_data = test_data
+
+    def folding(self):
+        pass
+

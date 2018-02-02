@@ -30,7 +30,7 @@ if __name__ == '__main__':
 
     train, dev, test = dl.train_data, dl.dev_data, dl.test_data
 
-    # Process with unigrams
+    # Process with uni-grams
     corpus_train = pp.flatten_to_one_corpus(train[:3])
     print(corpus_train)
     tokens = pp.tokenize_and_pad(corpus_train)
@@ -41,6 +41,13 @@ if __name__ == '__main__':
     model = Model("laplace_smoothing", voc["vocabulary"], tokens)
     model.perform_smoothing()
     print(model.prob)
+
+    # Process with bi-grams
+    n_grams = pp.calculate_ngram_counts(corpus_train, "bigram")
+    print(n_grams)
+
+
+
 
 
 
