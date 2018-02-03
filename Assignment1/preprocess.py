@@ -37,11 +37,12 @@ class Preprocessor(object):
         :param sentences:
         :return:
         """
+
         # Functional
         def flatten_iter(i, s, c, l):
             if i < l:
                 c = c + ". " + s[i]
-                flatten_iter(i+1, s, c, l)
+                flatten_iter(i + 1, s, c, l)
             return c
 
         # Imperative
@@ -61,15 +62,14 @@ class Preprocessor(object):
         """
         assert model_type in ['bigram', 'trigram', 'simple']
 
-        words = sentence.split()
+        mapper = {'simple': 1,
+                  'bigram': 2,
+                  'trigram': 3}
 
-        if model_type == 'bigram':
-            return ['<s1>'] + words + ['</s1>']
+        start = ['<s{}>'.format(i) for i in range(1, mapper.get(model_type))]
+        end = ['</s{}>'.format(i) for i in range(1, mapper.get(model_type))]
 
-        elif model_type == 'trigram':
-            return ['<s1>', '<s2>'] + words + ['</s1>', '</s2>']
-
-        return words
+        return start + sentence.split() + end
 
     @staticmethod
     def create_vocabulary(tokens, base_limit=10):
@@ -156,7 +156,6 @@ class Preprocessor(object):
 
 
 if __name__ == '__main__':
-
     a_corpus = "The Cape sparrow (Passer melanurus) is a southern African bird. A medium-sized sparrow at 14–16 " \
                "centimetres (5.5–6.3 in), it has distinctive grey, brown, and chestnut plumage, with large pale " \
                "head stripes in both sexes. The male has some bold black and white markings on its head and neck." \
