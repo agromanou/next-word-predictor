@@ -143,7 +143,7 @@ class Preprocessor(object):
             # appends each n-gram into a list in order to count them.
             for sublist in sentences_ngrams:
                 for item in sublist:
-                    all_ngrams.append(tuple(item))
+                    all_ngrams.append(tuple(item) + ('<pad>',) * (model_n - num))
 
         logger.info('Counting all n-grams')
 
@@ -153,7 +153,6 @@ class Preprocessor(object):
         logger.info('Total n-gram tokens created: {}'.format(len(counts)))
 
         return counts
-
 
 if __name__ == '__main__':
 
@@ -170,6 +169,6 @@ if __name__ == '__main__':
                " an introduced species. The Cape sparrow's population has not decreased significantly, and is not " \
                "seriously threatened by human activities. "
 
-    counts = Preprocessor().calculate_ngram_counts(corpus=a_corpus, model='bigram')
+    test_counts = Preprocessor().calculate_ngram_counts(corpus=a_corpus, model='trigram')
 
-    pprint(counts)
+    pprint(test_counts)
