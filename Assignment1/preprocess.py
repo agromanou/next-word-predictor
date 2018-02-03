@@ -143,7 +143,7 @@ class Preprocessor(object):
             # appends each n-gram into a list in order to count them.
             for sublist in sentences_ngrams:
                 for item in sublist:
-                    all_ngrams.append(" ".join(item))
+                    all_ngrams.append(tuple(item))
 
         logger.info('Counting all n-grams')
 
@@ -156,6 +156,7 @@ class Preprocessor(object):
 
 
 if __name__ == '__main__':
+
     a_corpus = "The Cape sparrow (Passer melanurus) is a southern African bird. A medium-sized sparrow at 14–16 " \
                "centimetres (5.5–6.3 in), it has distinctive grey, brown, and chestnut plumage, with large pale " \
                "head stripes in both sexes. The male has some bold black and white markings on its head and neck." \
