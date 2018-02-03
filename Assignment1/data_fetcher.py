@@ -92,8 +92,55 @@ class Fetcher(object):
 
         self.train_data = train_data
         self.test_data = test_data
-        self.dev_data = test_data
+        self.dev_data = dev_data
+
+    def split_in_train_test(self,
+                            sentences,
+                            seed=1234,
+                            test_size=.10,
+                            save_data=False):
+        """
+
+        :param sentences:
+        :param seed:
+        :param test_size:
+        :param save_data:
+        :return:
+        """
+        logger.info('Seed for reproducibility of the split: {}'.format(seed))
+        # setting the seed in order to be able to reproduce results.
+        np.random.seed(seed)
+
+        # shuffling the list of sentences.
+        random.shuffle(sentences)
+
+        # calculating the ratios in actual numbers
+        total_len = len(sentences)
+        test_sentences_size = int(total_len * test_size)
+        train_sentences_size = total_len - test_sentences_size
+
+        logger.info('Total number of sentences: {}'.format(len))
+        logger.info('Training Dataset Size: {}'.format(train_sentences_size))
+        logger.info('Test Dataset Size: {}'.format(test_sentences_size))
+
+        # splitting the data to train, development and test
+        train_data = sentences[:train_sentences_size]
+        test_data = sentences[train_sentences_size:]
+
+        assert len(train_data) == train_sentences_size
+        assert len(test_data) == test_sentences_size
+
+        if save_data:
+            train_df = pd.DataFrame(train_data, columns=['text'])
+            test_df = pd.DataFrame(test_data, columns=['text'])
+
+            logger.info('Saving Data-sets as .csv files.')
+
+            train_df.to_csv(DATA_DIR + 'europarl_train.csv', encoding='utf-8', index=False)
+            test_df.to_csv(DATA_DIR + 'europarl_test.csv', encoding='utf-8', index=False)
+
+        self.train_data = train_data
+        self.test_data = test_data
 
     def folding(self):
         pass
-
