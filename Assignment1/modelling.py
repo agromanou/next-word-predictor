@@ -1,3 +1,5 @@
+import numpy as np
+
 class Model(object):
     def __init__(self, smoothing_algo, vocabulary, tokens):
         self.smoothing_algo = smoothing_algo
@@ -45,6 +47,14 @@ class Model(object):
         :return:
         """
         pass
+
+    def log_prob(self):
+        """
+
+        :return: a dictionary with n-grams and assigned log probabilities
+        """
+        log_prob = dict(map(lambda k: (k, np.log(self.prob[k])), self.prob))
+        return log_prob
 
     def mle(self):
         pass
