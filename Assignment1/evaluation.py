@@ -6,7 +6,7 @@ class Evaluation(object):
     def compute_perplexity(self):
         pass
 
-    def compute_entrypy(self):
+    def compute_entropy(self):
         pass
 
     def compute_cross_entropy(self):

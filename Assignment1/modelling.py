@@ -1,7 +1,13 @@
 import numpy as np
 
 class Model(object):
-    def __init__(self, smoothing_algo, vocabulary, tokens):
+    def __init__(self,
+                 smoothing_algo,
+                 vocabulary,
+                 tokens):
+
+        assert smoothing_algo in ['laplace_smoothing', 'k_n']
+
         self.smoothing_algo = smoothing_algo
         self.vocabulary = vocabulary
         self.tokens = tokens
@@ -15,7 +21,7 @@ class Model(object):
         :param tokens:
         :return:
         """
-        return dict(map(lambda p: (p, grams[p] / voc[p.split(" ")[0]]), grams))
+        return dict(map(lambda p: (p, grams[p] / voc[p.split()[0]]), grams))
 
     def perform_smoothing(self):
         """
@@ -23,9 +29,12 @@ class Model(object):
         :return:
         """
         if self.smoothing_algo == "laplace_smoothing":
+
             print("Running Laplace smoothing process..")
             self.prob = self.laplace_smoothing()
+
         elif self.smoothing_algo == "k_n":
+
             print("Running Kneser-Ney smoothing process..")
             self.prob = self.kneser_ney_smoothing()
         else:
@@ -34,10 +43,11 @@ class Model(object):
     def laplace_smoothing(self, add_k=1):
         """
 
-        :param add_k:
+        :param add_k: Int.
         :return:
         """
-        pl = dict(map(lambda c: (c[0], (c[1] + add_k) / (len(self.tokens) + add_k * len(self.vocabulary))),
+        pl = dict(
+            map(lambda c: (c[0], (c[1] + add_k) / (len(self.tokens) + add_k * len(self.vocabulary))),
                       self.vocabulary.items()))
         return pl
 
@@ -61,6 +71,7 @@ class Model(object):
 
 
 if __name__ == '__main__':
+
     tokens = ["i", "want", "to", "eat", "chinese", "food", "lunch", "spend",
               "i", "want", "to", "eat", "chinese", "food", "lunch", "spend",
               "i", "want", "to", "eat", "chinese", "food", "lunch", "spend",
@@ -83,9 +94,14 @@ if __name__ == '__main__':
               'food lunch': 3,
               'lunch spend': 3}
 
-    modelObj = Model("laplace_smoothing", vocabulary_freq, tokens)
+    modelObj = Model("laplace_smoothing",
+                     vocabulary_freq,
+                     tokens)
     modelObj.perform_smoothing()
     print(modelObj.prob)
 
-    probs = Model("laplace_smoothing", vocabulary_freq, tokens).calculate_bayes_probs(ngrams, vocabulary_freq)
+    probs = Model("laplace_smoothing",
+                  vocabulary_freq,
+                  tokens).calculate_bayes_probs(ngrams,
+                                                vocabulary_freq)
     print(probs)
