@@ -3,6 +3,7 @@ from Assignment1 import DATA_DIR, setup_logger
 import numpy as np
 import pandas as pd
 from numpy import random
+from pprint import pprint
 
 logger = setup_logger(__name__)
 logger.disabled = True
@@ -142,5 +143,45 @@ class Fetcher(object):
         self.train_data = train_data
         self.test_data = test_data
 
-    def folding(self):
-        pass
+    @staticmethod
+    def feed_cross_validation(sentences,
+                              seed=1234,
+                              k_folds=5):
+
+        """
+        This method feeds the train and held_out data-sets in each iteration.
+        :param sentences: list. An iterable of sentences
+        :param seed: Int. A number that helps in the reproduction of the shuffling
+        :param k_folds: Int. Number of folds.
+        :return: yields a dict of train and held_out data-sets.
+        """
+
+        # setting the seed in order to be able to reproduce results.
+        np.random.seed(seed)
+
+        # shuffling the list of sentences.
+        logger.info('Shuffling data set in order to brake to train and held_out data-sets')
+        random.shuffle(sentences)
+
+        # calculating the ratios in actual numbers
+        total_len = len(sentences)
+
+        # split_size
+        split_size = int(total_len / float(k_folds))
+        logger.info('Spliting data-set in {} folds'.format(k_folds))
+        logger.info('Split size for held out dataset: {}'.format(split_size))
+
+        for i in range(1, k_folds + 1):
+
+            yield {'held_out': sentences[(i - 1) * split_size: i * split_size],
+                   'train': sentences[:(i - 1) * split_size] + sentences[i * split_size:]}
+
+
+if __name__ == "__main__":
+
+    dl = Fetcher(file='europarl-v7.el-en.',
+                 language='en')
+
+    test_sentences = ["the sentence number {}".format(i) for i in range(1, 22)]
+    for i in dl.feed_cross_validation(sentences=test_sentences):
+        pprint(i)
