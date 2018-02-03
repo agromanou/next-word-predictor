@@ -154,8 +154,8 @@ class Preprocessor(object):
 
         return counts
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     a_corpus = "The Cape sparrow (Passer melanurus) is a southern African bird. A medium-sized sparrow at 14–16 " \
                "centimetres (5.5–6.3 in), it has distinctive grey, brown, and chestnut plumage, with large pale " \
                "head stripes in both sexes. The male has some bold black and white markings on its head and neck." \
