@@ -57,14 +57,13 @@ class Model(object):
         :return:
         """
         if smoothing_algo == "laplace_smoothing":
-
             print("Running Laplace smoothing process..")
             self.smoothed_probs = self.laplace_smoothing()
 
         elif smoothing_algo == "k_n":
-
             print("Running Kneser-Ney smoothing process..")
             self.smoothed_probs = self.kneser_ney_smoothing()
+
         else:
             print("Please choose a valid smoothing method.")
 
@@ -119,7 +118,7 @@ class Model(object):
     def mle_predict_word(self, word):
         """
         This method performs the Maximum Likelihood Estimation algorithm and finds
-        the to 3 most likely words that will follow a given word.
+        the 3 most likely words that will follow a given word.
         :param word: The word we want to find the next one.
         :return: A dictionary with max 3 ordered probabilities and their respective words
         """
@@ -134,7 +133,6 @@ class Model(object):
 
 
 if __name__ == '__main__':
-
     # Test case with the following dictionaries
     tokens = ["<s>", "i", "want", "to", "eat", "chinese", "food", "lunch", "spend", "</s>",
               "<s>", "i", "want", "to", "eat", "chinese", "food", "lunch", "spend", "</s>",
