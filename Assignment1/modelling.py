@@ -1,5 +1,5 @@
 import numpy as np
-
+import operator
 
 class Model(object):
     def __init__(self,
@@ -86,15 +86,27 @@ class Model(object):
         log_prob = dict(map(lambda k: (k, - np.log(self.smoothed_probs[k])), self.smoothed_probs))
         self.log_probs = log_prob
 
-    def mle(self):
-        pass
+    def mle(self, word):
+        """
+
+        :param word:
+        :return:
+        """
+        next_words = {}
+        for k in self.smoothed_probs.keys():
+            if k[0] == word:
+                next_words[k[1]] = self.smoothed_probs[k]
+
+        sorted_ngams = sorted(next_words.items(), key=operator.itemgetter(1), reverse=True)
+
+        return sorted_ngams
 
 
 if __name__ == '__main__':
-    tokens = ["i", "want", "to", "eat", "chinese", "food", "lunch", "spend",
-              "i", "want", "to", "eat", "chinese", "food", "lunch", "spend",
-              "i", "want", "to", "eat", "chinese", "food", "lunch", "spend",
-              "i", "want", "to", "eat"]
+    tokens = ["<s>", "i", "want", "to", "eat", "chinese", "food", "lunch", "spend", "</s>",
+              "<s>", "i", "want", "to", "eat", "chinese", "food", "lunch", "spend", "</s>",
+              "<s>", "i", "want", "to", "eat", "chinese", "food", "lunch", "spend", "</s>",
+              "<s>", "i", "want", "to", "eat", "</s>"]
 
     vocabulary_freq = {"i": 4,
                        "want": 4,
@@ -103,18 +115,26 @@ if __name__ == '__main__':
                        "chinese": 3,
                        "food": 3,
                        "lunch": 3,
-                       "spend": 3}
+                       "spend": 3,
+                       "<s>": 4,
+                       "</s>": 4}
 
-    ngrams = {('i', 'want'): 4,
+    ngrams = {('<s>', 'i'): 4,
+              ('i', 'want'): 4,
               ('want', 'to'): 4,
               ('to', 'eat'): 4,
               ('eat', 'chinese'): 3,
+              ('eat', '</s>'): 1,
               ('chinese', 'food'): 3,
               ('food', 'lunch'): 3,
-              ('lunch', 'spend'): 3}
+              ('lunch', 'spend'): 3,
+              ('spend', '</s>'): 3}
 
     modelObj = Model(vocabulary_freq,
                      tokens,
                      ngrams)
 
     modelObj.fit_model("laplace_smoothing")
+
+    mle_dict = modelObj.mle("eat")
+    print(mle_dict)
