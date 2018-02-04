@@ -1,4 +1,6 @@
 from Assignment1 import DATA_DIR, setup_logger
+from Assignment1.preprocess import  Preprocessor
+from Assignment1.modelling import Model
 
 import numpy as np
 import pandas as pd
@@ -182,6 +184,31 @@ if __name__ == "__main__":
     dl = Fetcher(file='europarl-v7.el-en.',
                  language='en')
 
-    test_sentences = ["the sentence number {}".format(i) for i in range(1, 22)]
+    test_sentences = ["the sentence number" for i in range(1, 22)]
     for i in dl.feed_cross_validation(sentences=test_sentences):
-        pprint(i)
+        train = i["train"]
+        dev = i['held_out']
+
+        train_corpus = Preprocessor().flatten_to_one_corpus(train)
+        ngrams, padded_sentences = Preprocessor().calculate_ngram_counts(corpus=train_corpus, model='bigram')
+        tokens = Preprocessor().tokenize_and_pad(Preprocessor().flatten_to_one_corpus(padded_sentences))
+        vocabulary = Preprocessor().create_vocabulary(tokens)
+
+        # Create a model object with the dictionaries above
+        modelObj = Model(vocabulary,
+                         tokens,
+                         ngrams)
+
+        print(ngrams)
+        print(tokens)
+        print(vocabulary)
+
+        # fit model to data
+        modelObj.fit_model("laplace_smoothing")
+
+        print(ngrams)
+
+        break
+
+        # pprint(i["held_out"])
+        # pprint(i["train"])

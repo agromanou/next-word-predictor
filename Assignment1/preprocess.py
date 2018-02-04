@@ -72,7 +72,7 @@ class Preprocessor(object):
         return start + sentence.split() + end
 
     @staticmethod
-    def create_vocabulary(tokens, base_limit=10):
+    def create_vocabulary(tokens, base_limit=0):
         """
         This method counts all the tokens from a list of sentences. Then it creates a vocabulary with the most common
         tokens, that surpass the base limit and a rejection vocabulary for the rest.
@@ -152,7 +152,7 @@ class Preprocessor(object):
 
         logger.info('Total n-gram tokens created: {}'.format(len(counts)))
 
-        return counts
+        return counts, padded_sentences, tokens
 
 
 if __name__ == '__main__':
@@ -169,6 +169,6 @@ if __name__ == '__main__':
                " an introduced species. The Cape sparrow's population has not decreased significantly, and is not " \
                "seriously threatened by human activities. "
 
-    test_counts = Preprocessor().calculate_ngram_counts(corpus=a_corpus, model='trigram')
+    test_counts = Preprocessor().calculate_ngram_counts(corpus=a_corpus, model='bigram')
 
     pprint(test_counts)

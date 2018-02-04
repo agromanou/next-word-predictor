@@ -2,8 +2,8 @@ import numpy as np
 
 
 class Evaluation(object):
-    def __init__(self, model, data_to_test):
-        self.model = model
+    def __init__(self, model_to_test, data_to_test):
+        self.model = model_to_test
         self.data_to_test = data_to_test
 
     def compute_model_performance(self):
@@ -25,13 +25,11 @@ class Evaluation(object):
         for ngram in self.data_to_test.keys():
             total = total + (- np.log(self.model[ngram]))
 
-        print(total, len(self.data_to_test), 1 / len(self.data_to_test))
-
         return np.power(total, - (1 / len(self.data_to_test)))
 
     def compute_cross_entropy(self):
         """
-        
+
         :return:
         """
         total = 0
@@ -39,6 +37,7 @@ class Evaluation(object):
             total = total + np.log2(self.model[ngram])
 
         return - (total / len(self.data_to_test))
+
 
 if __name__ == '__main__':
     tokens_test = ["<s>", "i", "want", "to", "eat", "chinese", "food", "lunch", "spend", "</s>",
