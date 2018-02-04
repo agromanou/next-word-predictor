@@ -14,6 +14,7 @@ class Model(object):
         self.probs = {}
         self.smoothed_probs = {}
         self.log_probs = {}
+        self.trained_model = {}
 
     def fit_model(self, smoothing_algo):
         """
@@ -27,6 +28,7 @@ class Model(object):
         self.probs = self.calculate_bayes_probs(self.ngrams, self.vocabulary)
         self.perform_smoothing(smoothing_algo)
         self.log_prob()
+        self.mle()
 
         print(self.vocabulary)
         print(len(self.vocabulary))
@@ -34,6 +36,7 @@ class Model(object):
         print(self.probs)
         print(self.smoothed_probs)
         print(self.log_probs)
+        print(self.trained_model)
 
     @staticmethod
     def calculate_bayes_probs(grams, voc):
@@ -92,10 +95,31 @@ class Model(object):
         log_prob = dict(map(lambda k: (k, - np.log(self.smoothed_probs[k])), self.smoothed_probs))
         self.log_probs = log_prob
 
-    def mle(self, word):
+    def mle(self):
+        """
+        This method performs the Maximum Likelihood Estimation algorithm to the ngrams dictionary
+        and  keeps the ngram with the max prob for each word.
+        :return: A dictionary with the maximum probability for each word
+        """
+        for word in self.vocabulary.keys():
+            ngram_to_store = None
+            max_value = None
+            for ngram in self.smoothed_probs.keys():
+                if word == ngram[0]:
+                    if max_value is None:
+                        ngram_to_store = ngram
+                        max_value = self.smoothed_probs[ngram]
+
+                    elif max_value < self.smoothed_probs[ngram]:
+                        ngram_to_store = ngram
+                        max_value = self.smoothed_probs[ngram]
+
+            self.trained_model[ngram_to_store] = max_value
+
+    def mle_predict_word(self, word):
         """
         This method performs the Maximum Likelihood Estimation algorithm and finds
-        the to 3 most likely words that will fillow a given word.
+        the to 3 most likely words that will follow a given word.
         :param word: The word we want to find the next one.
         :return: A dictionary with max 3 ordered probabilities and their respective words
         """
@@ -148,5 +172,5 @@ if __name__ == '__main__':
     modelObj.fit_model("laplace_smoothing")
 
     # predict
-    mle_dict = modelObj.mle("eat")
+    mle_dict = modelObj.mle_predict_word("eat")
     print(mle_dict)
