@@ -1,6 +1,7 @@
 import numpy as np
 import operator
 
+
 class Model(object):
     def __init__(self,
                  vocabulary,
@@ -16,8 +17,9 @@ class Model(object):
 
     def fit_model(self, smoothing_algo):
         """
-
-        :param smoothing_algo:
+        This method runs the modeling process by calculating the Bayes probabilities
+        and performing smoothing on the Models variables.
+        :param smoothing_algo: The name of the smoothing algorithm that will be used.
         :return:
         """
         assert smoothing_algo in ['laplace_smoothing', 'k_n']
@@ -36,16 +38,19 @@ class Model(object):
     @staticmethod
     def calculate_bayes_probs(grams, voc):
         """
-        P(w2 | w1) = count(w1, w2) / count(w1)
-        :param ngrams:
-        :param tokens:
-        :return:
+        This methods calculates the Bayes probability for each ngram using
+        the following equation: P(w2 | w1) = count(w1, w2) / count(w1).
+        :param grams: A dictionary with pairs of words and their frequencies
+        :param voc: A dictionary with each unique word and their frequencies.
+        :return: A dictionary with the bayes probabilities for each ngram tuple.
         """
         return dict(map(lambda p: (p, grams[p] / voc[p[0]]), grams))
 
     def perform_smoothing(self, smoothing_algo):
         """
-
+        This method handles smoothing process and calls a certain smoothing algorithm
+        based on the given name.
+        :param smoothing_algo: A string with the name of the smoothing algorithm.
         :return:
         """
         if smoothing_algo == "laplace_smoothing":
@@ -62,9 +67,10 @@ class Model(object):
 
     def laplace_smoothing(self, add_k=1):
         """
-
-        :param add_k: Int.
-        :return:
+        This method performs add-k smoothing algorithm. Be default the k is equal to 1
+        and thus it performs the Laplace smoothing algorithm.
+        :param add_k: The k param
+        :return: A dictionary with the smoothed probabilities for each ngram tuple
         """
         pl = dict(
             map(lambda c: (c[0], (c[1] + add_k) / (len(self.tokens) + add_k * len(self.vocabulary))),
@@ -81,16 +87,17 @@ class Model(object):
     def log_prob(self):
         """
 
-        :return: a dictionary with n-grams and assigned log probabilities
+        :return: A dictionary with the logged probabilities for each ngram tuple
         """
         log_prob = dict(map(lambda k: (k, - np.log(self.smoothed_probs[k])), self.smoothed_probs))
         self.log_probs = log_prob
 
     def mle(self, word):
         """
-
-        :param word:
-        :return:
+        This method performs the Maximum Likelihood Estimation algorithm and finds
+        the to 3 most likely words that will fillow a given word.
+        :param word: The word we want to find the next one.
+        :return: A dictionary with max 3 ordered probabilities and their respective words
         """
         next_words = {}
         for k in self.smoothed_probs.keys():
@@ -103,6 +110,8 @@ class Model(object):
 
 
 if __name__ == '__main__':
+
+    # Test case with the following dictionaries
     tokens = ["<s>", "i", "want", "to", "eat", "chinese", "food", "lunch", "spend", "</s>",
               "<s>", "i", "want", "to", "eat", "chinese", "food", "lunch", "spend", "</s>",
               "<s>", "i", "want", "to", "eat", "chinese", "food", "lunch", "spend", "</s>",
@@ -130,11 +139,14 @@ if __name__ == '__main__':
               ('lunch', 'spend'): 3,
               ('spend', '</s>'): 3}
 
+    # Create a model object with the dictionaries above
     modelObj = Model(vocabulary_freq,
                      tokens,
                      ngrams)
 
+    # fit model to data
     modelObj.fit_model("laplace_smoothing")
 
+    # predict
     mle_dict = modelObj.mle("eat")
     print(mle_dict)
