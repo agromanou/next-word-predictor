@@ -2,9 +2,19 @@ import numpy as np
 
 
 class Evaluation(object):
+
     def __init__(self, model_to_test, data_to_test):
+        """
+        This class is responsible for the evaluation of the language model.
+        :param model_to_test:
+        :param data_to_test:
+        """
+
         self.model = model_to_test
         self.data_to_test = data_to_test
+
+        self.cross_entropy = None
+        self.perplexity = None
 
     def compute_model_performance(self):
         """
@@ -14,32 +24,40 @@ class Evaluation(object):
         cross_entropy = self.compute_cross_entropy()
         perplexity = self.compute_perplexity()
 
-        return cross_entropy, perplexity
+        self.cross_entropy = cross_entropy
+        self.perplexity = perplexity
+
+        return dict(cross_entropy=cross_entropy,
+                    perplexity=perplexity)
 
     def compute_perplexity(self):
         """
+        This method computes the perplexity for a given test dataset.
 
         :return:
         """
+
         total = 0
-        for ngram in self.data_to_test.keys():
-            total = total + (- np.log(self.model[ngram]))
+        for n_gram in self.data_to_test.keys():
+            total = total + (- np.log(self.model[n_gram]))
 
         return np.power(total, - (1 / len(self.data_to_test)))
 
     def compute_cross_entropy(self):
         """
+        This method computes the cross entropy for a given test dataset.
 
         :return:
         """
         total = 0
-        for ngram in self.data_to_test.keys():
-            total = total + np.log2(self.model[ngram])
+        for n_gram in self.data_to_test.keys():
+            total = total + np.log2(self.model[n_gram])
 
         return - (total / len(self.data_to_test))
 
 
 if __name__ == '__main__':
+
     tokens_test = ["<s>", "i", "want", "to", "eat", "chinese", "food", "lunch", "spend", "</s>",
                    "<s>", "i", "want", "to", "eat", "chinese", "food", "lunch", "spend", "</s>",
                    "<s>", "i", "want", "to", "eat", "chinese", "food", "lunch", "spend", "</s>",
