@@ -4,7 +4,6 @@ import unittest
 
 
 class PreprocessorTest(unittest.TestCase):
-
     def setUp(self):
         self.thePreprocessorObject = Preprocessor()
 
@@ -43,7 +42,7 @@ class PreprocessorTest(unittest.TestCase):
         :return:
         """
         sentence = "This is a quite large sentence"
-        exp_outcome = [['This'],['is'],['a'], ['quite'], ['large'], ['sentence']]
+        exp_outcome = [['This'], ['is'], ['a'], ['quite'], ['large'], ['sentence']]
         print(sentence)
 
         ngrams = self.thePreprocessorObject.create_ngrams(sentence.split(), 1)

@@ -4,6 +4,7 @@ from Assignment1 import setup_logger
 import re
 
 logger = setup_logger(__name__)
+logger.disabled = True
 
 
 class Preprocessor(object):
@@ -31,6 +32,28 @@ class Preprocessor(object):
         return filtered
 
     @staticmethod
+    def flatten_to_one_corpus(sentences):
+        """
+
+        :param sentences:
+        :return:
+        """
+
+        # Functional
+        def flatten_iter(i, s, c, l):
+            if i < l:
+                c = c + ". " + s[i]
+                flatten_iter(i + 1, s, c, l)
+            return c
+
+        # Imperative
+        # corpus = ""
+        # for sentence in sentences:
+        #     corpus = corpus + ". " + sentence
+
+        return flatten_iter(0, sentences, "", len(sentences))
+
+    @staticmethod
     def tokenize_and_pad(sentence, model_type='simple'):
         """
         This method splits a sentence into tokens. Padding is added if necessary according the model type.
@@ -40,30 +63,30 @@ class Preprocessor(object):
         """
         assert model_type in ['bigram', 'trigram', 'simple']
 
-        words = sentence.split()
+        mapper = {'simple': 1,
+                  'bigram': 2,
+                  'trigram': 3}
 
-        if model_type == 'bigram':
-            return ['<s1>'] + words + ['</s1>']
+        start = ['<s{}>'.format(i) for i in range(1, mapper.get(model_type))]
+        end = ['</s{}>'.format(i) for i in range(1, mapper.get(model_type))]
 
-        elif model_type == 'trigram':
-            return ['<s1>', '<s2>'] + words + ['</s1>', '</s2>']
+        return start + sentence.split() + end
 
-        return words
-
-    def create_vocabulary(self, sentences, base_limit=10):
+    @staticmethod
+    def create_vocabulary(tokens, base_limit=0):
         """
         This method counts all the tokens from a list of sentences. Then it creates a vocabulary with the most common
         tokens, that surpass the base limit and a rejection vocabulary for the rest.
 
-        :param sentences: list. A list of strings.
+        :param tokens: list. A list of strings.
         :param base_limit: int. A number defining the base limit for the validity of the tokens.
         :return: dict. A dictionary with the vocabulary and the rejected tokens
         """
 
         logger.info('Creating Vocabulary with base_limit: {}'.format(base_limit))
 
-        # grab all the tokens in an iterator. Not in a list.
-        tokens = (token for sentence in sentences for token in self.tokenize_and_pad(sentence, model_type='simple'))
+        # # grab all the tokens in an iterator. Not in a list.
+        # tokens = (token for sentence in sentences for token in self.tokenize_and_pad(sentence, model_type='simple'))
 
         tokens_count = Counter(tokens)
 
@@ -121,7 +144,7 @@ class Preprocessor(object):
             # appends each n-gram into a list in order to count them.
             for sublist in sentences_ngrams:
                 for item in sublist:
-                    all_ngrams.append(" ".join(item))
+                    all_ngrams.append(tuple(item) + ('<pad>',) * (model_n - num))
 
         logger.info('Counting all n-grams')
 
@@ -130,11 +153,10 @@ class Preprocessor(object):
 
         logger.info('Total n-gram tokens created: {}'.format(len(counts)))
 
-        return counts
+        return counts, padded_sentences, tokens
 
 
 if __name__ == '__main__':
-
     a_corpus = "The Cape sparrow (Passer melanurus) is a southern African bird. A medium-sized sparrow at 14–16 " \
                "centimetres (5.5–6.3 in), it has distinctive grey, brown, and chestnut plumage, with large pale " \
                "head stripes in both sexes. The male has some bold black and white markings on its head and neck." \
@@ -148,6 +170,6 @@ if __name__ == '__main__':
                " an introduced species. The Cape sparrow's population has not decreased significantly, and is not " \
                "seriously threatened by human activities. "
 
-    counts = Preprocessor().calculate_ngram_counts(corpus=a_corpus, model='bigram')
+    test_counts = Preprocessor().calculate_ngram_counts(corpus=a_corpus, model='bigram')
 
-    pprint(counts)
+    pprint(test_counts)

@@ -7,7 +7,6 @@ def setup_logger(name):
     """
 
     :param name:
-    :param level:
     :return:
     """
 
