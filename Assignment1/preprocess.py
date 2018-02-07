@@ -1,6 +1,7 @@
 from collections import Counter
 from pprint import pprint
 from Assignment1 import setup_logger
+import re
 
 logger = setup_logger(__name__)
 
@@ -21,7 +22,7 @@ class Preprocessor(object):
 
         # splitting the corpus in sentences,
         # and getting rid of the white spaces at the start and end of each sentence
-        sentences = list(map(lambda s: s.strip(), corpus.split('.')))
+        sentences = list(map(lambda s: s.strip(), re.split('\n', corpus)))
         # filtering empty sentences
         filtered = list(filter(None, sentences))
 
