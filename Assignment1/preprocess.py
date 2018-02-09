@@ -153,7 +153,7 @@ class Preprocessor(object):
 
         logger.info('Total n-gram tokens created: {}'.format(len(counts)))
 
-        return counts, padded_sentences, tokens
+        return counts, padded_sentences
 
 
 if __name__ == '__main__':

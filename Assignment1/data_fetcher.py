@@ -1,5 +1,5 @@
 from Assignment1 import DATA_DIR, setup_logger
-from Assignment1.preprocess import  Preprocessor
+from Assignment1.preprocess import Preprocessor
 from Assignment1.modelling import Model
 
 import numpy as np
