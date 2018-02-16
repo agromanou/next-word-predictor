@@ -1,6 +1,9 @@
 from collections import Counter
 from pprint import pprint
 from Assignment1 import setup_logger
+from nltk.corpus import stopwords
+from nltk.tokenize import RegexpTokenizer
+
 import re
 
 logger = setup_logger(__name__)
@@ -54,6 +57,15 @@ class Preprocessor(object):
         return flatten_iter(0, sentences, "", len(sentences))
 
     @staticmethod
+    def flatten_ton_one_corpus2(sentences):
+        """
+
+        :param sentences:
+        :return:
+        """
+        return '. '.join(sentences)
+
+    @staticmethod
     def tokenize_and_pad(sentence, model_type='simple'):
         """
         This method splits a sentence into tokens. Padding is added if necessary according the model type.
@@ -97,7 +109,7 @@ class Preprocessor(object):
         logger.info('Valid Vocabulary size: {}'.format(len(valid_tokens)))
         logger.info('Rejection Vocabulary size: {}'.format(len(invalid_tokens)))
 
-        return dict(vocabulary=valid_tokens, rejected=invalid_tokens)
+        return valid_tokens, invalid_tokens
 
     @staticmethod
     def create_ngrams(seq, n):
@@ -155,21 +167,87 @@ class Preprocessor(object):
 
         return counts, padded_sentences
 
+    @staticmethod
+    def replace_uncommon_words(corpus, words, replacement='<UNK>'):
+        """
+
+        :param corpus:
+        :param words:
+        :param replacement:
+        :return:
+        """
+
+        altered_corpus = corpus
+
+        replacement = " {} ".format(replacement)
+
+        for w in words:
+            w = " {} ".format(w)
+
+            altered_corpus = re.sub(w, replacement, altered_corpus)
+
+        return altered_corpus
+
+    @staticmethod
+    def tokenize_corpus(corpus):
+        """
+
+        :param corpus:
+        :return:
+        """
+        tokenizer = RegexpTokenizer(r'\w+')
+        tokens = tokenizer.tokenize(corpus.lower())
+
+        return tokens
+
+    def run(self, corpus, base_limit=1, token_replacement='UNK'):
+        """
+
+        :param corpus:
+        :param base_limit:
+        :param token_replacement:
+        :return:
+        """
+
+        # split corpus in tokens
+        tokens = self.tokenize_corpus(corpus)
+
+        # count tokens, and create vocabulary-rejection lexicons
+        vocabulary_tokens_counts, rejection_tokens_counts = self.create_vocabulary(tokens=tokens,
+                                                                                   base_limit=base_limit)
+
+        # replacing uncommon words in original corpus:
+        new_corpus = self.replace_uncommon_words(corpus=corpus,
+                                                 words=rejection_tokens_counts.keys(),
+                                                 replacement=token_replacement)
+
+        # Split new corpus in sentences
+        sentences = self.split_to_sentences(corpus=new_corpus)
+
+        # 2. split sentences in tokens
+        # 4. Replace uncommon words in main corpus with 'replacement' token
+
+        pass
+
 
 if __name__ == '__main__':
-    a_corpus = "The Cape sparrow (Passer melanurus) is a southern African bird. A medium-sized sparrow at 14–16 " \
-               "centimetres (5.5–6.3 in), it has distinctive grey, brown, and chestnut plumage, with large pale " \
-               "head stripes in both sexes. The male has some bold black and white markings on its head and neck." \
-               " The species inhabits semi-arid savannah, cultivated areas, and towns, from the central coast of " \
-               "Angola to eastern South Africa and Swaziland. Cape sparrows primarily eat seeds, along with soft " \
-               "plant parts and insects. They typically breed in colonies, and search for food in large nomadic " \
-               "flocks. The nest can be constructed in a tree, bush, cavity, or disused nest of another species. " \
+    a_corpus = "The Cape sparrow (Passer melanurus) is a southern African bird. \n\n " \
+               "A medium-sized sparrow at 14–16 centimetres (5.5–6.3 in), it has distinctive grey, brown, and" \
+               " chestnut plumage, with large pale head stripes in both sexes. \n\n " \
+               "The male has some bold black and white markings on its head and neck. \n\n " \
+               "The species inhabits semi-arid savannah, cultivated areas, and towns, from the central coast of " \
+               "Angola to eastern South Africa and Swaziland. \n\n " \
+               "Cape sparrows primarily eat seeds, along with soft plant parts and insects. They typically breed in" \
+               " colonies, and search for food in large nomadic flocks. \n\n " \
+               "The nest can be constructed in a tree, bush, cavity, or disused nest of another species. \n\n" \
                "A typical clutch contains three or four eggs, and both parents are involved, from nest building" \
-               " to feeding the young. The species is common in most of its range and coexists successfully in urban" \
+               " to feeding the young. \n\n " \
+               "The species is common in most of its range and coexists successfully in urban" \
                " habitats with two of its relatives, the native southern grey-headed sparrow and the house sparrow," \
-               " an introduced species. The Cape sparrow's population has not decreased significantly, and is not " \
+               " an introduced species. \n\n " \
+               "The Cape sparrow's population has not decreased significantly, and is not " \
                "seriously threatened by human activities. "
 
-    test_counts = Preprocessor().calculate_ngram_counts(corpus=a_corpus, model='bigram')
+    test_counts = Preprocessor().run(corpus=a_corpus)
 
     pprint(test_counts)

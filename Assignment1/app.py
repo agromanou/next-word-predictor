@@ -2,8 +2,8 @@ from Assignment1.preprocess import Preprocessor
 from Assignment1.data_fetcher import Fetcher
 
 if __name__ == '__main__':
-    dl_obj = Fetcher(file='europarl-v7.el-en.',
-                     language='en')
+
+    dl_obj = Fetcher(file='europarl-v7.el-en.', language='en')
 
     pre_obj = Preprocessor()
 
