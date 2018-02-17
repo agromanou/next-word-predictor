@@ -1,20 +1,18 @@
 import numpy as np
 import operator
+from pprint import pprint
 
 
 class Model(object):
-    def __init__(self,
-                 vocabulary,
-                 tokens,
-                 ngrams):
+    def __init__(self, ngrams):
 
-        self.vocabulary = vocabulary
-        self.tokens = tokens
-        self.ngrams = ngrams
-        self.probs = {}
-        self.smoothed_probs = {}
-        self.log_probs = {}
-        self.trained_model = {}
+        self.ngrams = ngrams[2]
+        self.vocabulary = ngrams[1]
+        self.tokens_count = sum(self.vocabulary.values())
+        self.probs = dict()
+        self.smoothed_probs = dict()
+        self.log_probs = dict()
+        self.trained_model = dict()
 
     def fit_model(self, smoothing_algo):
         """
@@ -25,21 +23,20 @@ class Model(object):
         """
         assert smoothing_algo in ['laplace_smoothing', 'k_n']
 
-        self.probs = self.calculate_bayes_probs(self.ngrams, self.vocabulary)
+        self.probs = self.calculate_bayes_probs()
         self.perform_smoothing(smoothing_algo)
         self.log_prob()
         self.mle()
 
-        print(self.vocabulary)
-        print(len(self.vocabulary))
-        print(self.ngrams)
-        print(self.probs)
-        print(self.smoothed_probs)
-        print(self.log_probs)
-        print(self.trained_model)
+        # print(self.vocabulary)
+        # print(len(self.vocabulary))
+        # print(self.ngrams)
+        # print(self.probs)
+        # print(self.smoothed_probs)
+        # print(self.log_probs)
+        # print(self.trained_model)
 
-    @staticmethod
-    def calculate_bayes_probs(grams, voc):
+    def calculate_bayes_probs(self):
         """
         This methods calculates the Bayes probability for each ngram using
         the following equation: P(w2 | w1) = count(w1, w2) / count(w1).
@@ -47,7 +44,9 @@ class Model(object):
         :param voc: A dictionary with each unique word and their frequencies.
         :return: A dictionary with the bayes probabilities for each ngram tuple.
         """
-        return dict(map(lambda p: (p, grams[p] / voc[p[0]]), grams))
+        return dict(
+            map(lambda ngram_tuple: (ngram_tuple, self.ngrams[ngram_tuple] / self.vocabulary[(ngram_tuple[0],)]),
+                self.ngrams))
 
     def perform_smoothing(self, smoothing_algo):
         """
@@ -75,7 +74,7 @@ class Model(object):
         :return: A dictionary with the smoothed probabilities for each ngram tuple
         """
         pl = dict(
-            map(lambda c: (c[0], (c[1] + add_k) / (len(self.tokens) + add_k * len(self.vocabulary))),
+            map(lambda c: (c[0], (c[1] + add_k) / (self.tokens_count + add_k * len(self.vocabulary))),
                 self.probs.items()))
         return pl
 
