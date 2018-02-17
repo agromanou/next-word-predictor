@@ -7,6 +7,8 @@ from Assignment1.evaluation import Evaluation
 from Assignment1.modelling import Model
 from Assignment1.preprocess import Preprocessor
 
+from pprint import pprint
+
 
 def prepare_test_metadata(iterable_of_sentence_tokens, rejected_words, model_n, replacement='<UNK>'):
     """
@@ -100,7 +102,6 @@ def run_example(mod_type='bigram', smoothing='laplace_smoothing', baselim=5, n_s
 
 
 if __name__ == '__main__':
-
     mod_type = 'bigram'
     smoothing = 'laplace_smoothing'
     baselim = 5
