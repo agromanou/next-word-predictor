@@ -103,8 +103,8 @@ if __name__ == '__main__':
 
     mod_type = 'bigram'
     smoothing = 'laplace_smoothing'
-    baselim = 5
-    nsentences = 10000
+    baselim = 10
+    nsentences = 100000
 
     run_example(mod_type=mod_type,
                 smoothing=smoothing,
