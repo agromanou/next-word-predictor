@@ -1,15 +1,16 @@
 import numpy as np
+from pprint import pprint
 
 
 class Evaluation(object):
 
-    def __init__(self, model_to_test, data_to_test):
+    def __init__(self, model_to_test, data_to_test, tokens_count):
         """
         This class is responsible for the evaluation of the language model.
         :param model_to_test:
         :param data_to_test:
         """
-
+        self.tokens_count = tokens_count
         self.model = model_to_test
         self.data_to_test = data_to_test
 
@@ -38,10 +39,10 @@ class Evaluation(object):
         """
 
         total = 0
-        for n_gram in self.data_to_test.keys():
-            total = total + (- np.log(self.model[n_gram]))
+        for n_gram in self.data_to_test:
+            total = total + (- np.log(self.model.get(n_gram, 1)))
 
-        return np.power(total, - (1 / len(self.data_to_test)))
+        return np.power(total, - (1 / self.tokens_count))
 
     def compute_cross_entropy(self):
         """
@@ -50,14 +51,16 @@ class Evaluation(object):
         :return:
         """
         total = 0
-        for n_gram in self.data_to_test.keys():
-            total = total + np.log2(self.model[n_gram])
+        for n_gram in self.data_to_test:
+            # pprint(n_gram)
+            # pprint(self.model.get(n_gram, 'missing'))
+            # vasoume 1 gia na ginei log1 = 0
+            total = total + np.log(self.model.get(n_gram, 1))
 
-        return - (total / len(self.data_to_test))
+        return - (total / self.tokens_count)
 
 
 if __name__ == '__main__':
-
     tokens_test = ["<s>", "i", "want", "to", "eat", "chinese", "food", "lunch", "spend", "</s>",
                    "<s>", "i", "want", "to", "eat", "chinese", "food", "lunch", "spend", "</s>",
                    "<s>", "i", "want", "to", "eat", "chinese", "food", "lunch", "spend", "</s>",
