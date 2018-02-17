@@ -145,6 +145,8 @@ class Fetcher(object):
         self.train_data = train_data
         self.test_data = test_data
 
+        return train_data, test_data
+
     @staticmethod
     def feed_cross_validation(sentences,
                               seed=1234,
@@ -170,7 +172,7 @@ class Fetcher(object):
 
         # split_size
         split_size = int(total_len / float(k_folds))
-        logger.info('Spliting data-set in {} folds'.format(k_folds))
+        logger.info('Splitting data-set in {} folds'.format(k_folds))
         logger.info('Split size for held out dataset: {}'.format(split_size))
 
         for i in range(1, k_folds + 1):

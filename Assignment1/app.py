@@ -1,32 +1,53 @@
 from Assignment1.preprocess import Preprocessor
 from Assignment1.data_fetcher import Fetcher
+from pprint import pprint
+import re
+import itertools
 
 if __name__ == '__main__':
+
+    mod_type = 'trigram'
 
     dl_obj = Fetcher(file='europarl-v7.el-en.', language='en')
 
     pre_obj = Preprocessor()
 
+    # loading the whole dataset.
     dataset = dl_obj.load_dataset()
-    sentences = pre_obj.split_to_sentences(dataset)
-    dl_obj.split_in_train_test(sentences)
 
-    train_sentences = dl_obj.train_data[:10]
+    # Splitting the whole dataset into sentences, in order to then split into train and test.
+    sentences = pre_obj.split_to_sentences(dataset)[:1000]
+
+    padded_sentences = [pre_obj.tokenize_and_pad(sentence=s, model_type=mod_type) for s in sentences]
+
+    # Splitting in train and test sentences. Everything will be stored in Fetcher's object.
+    dl_obj.split_in_train_test(padded_sentences)
+
+
+    train_sentences = dl_obj.train_data
+
+    train_tokens = itertools.chain(*train_sentences)
+
+    pre_obj.calculate_ngram_counts(mod_type,
+                                   padded_sentences,
+                                   base_limit=3)
+    # print(len(vocabulary_tokens_counts))
+    # print(len(rejection_tokens_counts))
 
     for i in dl_obj.feed_cross_validation(sentences=train_sentences):
+
         train = i["train"]
         dev = i['held_out']
+        # print(train)
+
+        # count tokens, and create vocabulary-rejection lexicons
+
+        # # replacing uncommon words in original corpus:
+        # new_corpus = pre_obj.replace_uncommon_words(corpus=train_corpus,
+        #                                             words=rejection_tokens_counts.keys(),
+        #                                             replacement='<UNK>')
+        # pprint(new_corpus)
         break
-
-    train_corpus = pre_obj.flatten_to_one_corpus(train)
-    tokens = pre_obj.tokenize_and_pad(train_corpus)
-
-    
-
-
-
-    print(train_corpus)
-
 
     # pp = Preprocessor()
     #

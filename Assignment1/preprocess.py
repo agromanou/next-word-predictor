@@ -26,7 +26,7 @@ class Preprocessor(object):
 
         # splitting the corpus in sentences,
         # and getting rid of the white spaces at the start and end of each sentence
-        sentences = list(map(lambda s: s.strip(), re.split('\n', corpus)))
+        sentences = list(map(lambda s: s.strip().lower(), re.split('\n', corpus)))
         # filtering empty sentences
         filtered = list(filter(None, sentences))
 
@@ -35,29 +35,7 @@ class Preprocessor(object):
         return filtered
 
     @staticmethod
-    def flatten_to_one_corpus(sentences):
-        """
-
-        :param sentences:
-        :return:
-        """
-
-        # Functional
-        def flatten_iter(i, s, c, l):
-            if i < l:
-                c = c + ". " + s[i]
-                flatten_iter(i + 1, s, c, l)
-            return c
-
-        # Imperative
-        # corpus = ""
-        # for sentence in sentences:
-        #     corpus = corpus + ". " + sentence
-
-        return flatten_iter(0, sentences, "", len(sentences))
-
-    @staticmethod
-    def flatten_ton_one_corpus2(sentences):
+    def flatten_ton_one_corpus(sentences):
         """
 
         :param sentences:
@@ -78,6 +56,8 @@ class Preprocessor(object):
         mapper = {'simple': 1,
                   'bigram': 2,
                   'trigram': 3}
+
+        sentence = re.sub('^[^a-zA-z]*|[^a-zA-Z]*$', '', sentence)
 
         start = ['<s{}>'.format(i) for i in range(1, mapper.get(model_type))]
         end = ['</s{}>'.format(i) for i in range(1, mapper.get(model_type))]
@@ -112,62 +92,6 @@ class Preprocessor(object):
         return valid_tokens, invalid_tokens
 
     @staticmethod
-    def create_ngrams(seq, n):
-        """
-        This method creates a list of ngrams from a given sentence.
-
-        :param seq: The given sentence.
-        :param n: The length of word tuples
-        :return: The n-grams for a given sentence.
-        """
-        assert n in [1, 2, 3]
-
-        return [seq[i:i + n] for i in range(len(seq) - n + 1)]
-
-    def calculate_ngram_counts(self, corpus, model):
-        """
-        This method calculates all the n-gram counts for a given model.
-
-        :param corpus: Str. A text
-        :param model: Str. Enum defining the model that we want to use.
-        :return: Counter. A python Counter of the word n-grams.
-        """
-
-        assert model in ['bigram', 'trigram']
-
-        model_n = 2 if model == 'bigram' else 3
-
-        all_ngrams = list()
-
-        # splitting corpus into sentences
-        sentences = self.split_to_sentences(corpus)
-
-        # padding each sentence separately in respect to the given model
-        logger.info('Padding each sentence separately in respect to the {} model'.format(model))
-        padded_sentences = tuple(map(lambda s: self.tokenize_and_pad(s, model_type=model), sentences))
-
-        # calculates all the n-grams up to the models actual n.
-        # E.g for trigram, creates uni-grams, bi-grams and tri-grams
-        for num in range(1, model_n + 1):
-
-            logger.info("Creating {}-gram tokens for all padded sentences".format(num))
-            sentences_ngrams = map(lambda s: self.create_ngrams(s, n=num), padded_sentences)
-
-            # appends each n-gram into a list in order to count them.
-            for sublist in sentences_ngrams:
-                for item in sublist:
-                    all_ngrams.append(tuple(item) + ('<pad>',) * (model_n - num))
-
-        logger.info('Counting all n-grams')
-
-        # counting all the different n-grams.
-        counts = Counter(all_ngrams)
-
-        logger.info('Total n-gram tokens created: {}'.format(len(counts)))
-
-        return counts, padded_sentences
-
-    @staticmethod
     def replace_uncommon_words(corpus, words, replacement='<UNK>'):
         """
 
@@ -179,12 +103,10 @@ class Preprocessor(object):
 
         altered_corpus = corpus
 
-        replacement = " {} ".format(replacement)
-
         for w in words:
-            w = " {} ".format(w)
-
-            altered_corpus = re.sub(w, replacement, altered_corpus)
+            altered_corpus = re.sub(r'\b({})\b'.format(w),
+                                    replacement,
+                                    altered_corpus)
 
         return altered_corpus
 
@@ -199,6 +121,80 @@ class Preprocessor(object):
         tokens = tokenizer.tokenize(corpus.lower())
 
         return tokens
+
+    @staticmethod
+    def calculate_ngram_counts(model, list_of_tokens, base_limit):
+        """
+
+        :param model:
+        :param list_of_tokens:
+        :param base_limit:
+        :return:
+        """
+
+        assert model in ['bigram', 'trigram']
+
+        def create_ngrams(seq, n):
+            """
+            This method creates a list of n-grams from a given sentence.
+
+            :param seq: The given sentence.
+            :param n: The length of word tuples
+            :return: The n-grams for a given sentence.
+            """
+            assert n in [1, 2, 3]
+
+            return [seq[i:i + n] for i in range(len(seq) - n + 1)]
+
+        model_n = 2 if model == 'bigram' else 3
+        all_ngrams = dict()
+
+        # calculates all the n-grams up to the models actual n.
+        # E.g for trigram, creates uni-grams, bi-grams and tri-grams
+
+        for num in range(1, model_n + 1):
+
+            all_ngrams[num] = list()
+
+            logger.info("Creating {}-gram tokens for all padded sentences".format(num))
+            sentences_ngrams = map(lambda s: create_ngrams(s, n=num), list_of_tokens)
+
+            # appends each n-gram into a list in order to count them.
+            for sublist in sentences_ngrams:
+                for item in sublist:
+                    all_ngrams[num].append(tuple(item))
+
+        logger.info('Counting all n-grams')
+        counts = {}
+        # counting all the different n-grams.
+        for key in all_ngrams:
+            counts[key] = dict(Counter(all_ngrams[key]))
+
+        # selecting the rejected tokens
+        invalid_tokens = {k[0] for k, v in counts[1].items() if v < base_limit}
+
+        final_counts = dict({i: {} for i in range(1, model_n + 1)})
+
+        for n in counts:
+            for key_tuple, ngram_count in counts[n].items():
+                new_tuple = key_tuple
+                for r_word in invalid_tokens:
+                    if r_word in key_tuple:
+
+                        # print('ngram', n,
+                        #       'removed word:', r_word,
+                        #       'Counts key:', key_tuple,
+                        #       'Counts value', ngram_count)
+
+                        new_tuple = tuple("UNK" if w == r_word else w for w in key_tuple)
+
+                final_counts[n][new_tuple] = final_counts[n].get(key_tuple, 0) + ngram_count
+
+        # logger.info('Valid Vocabulary size: {}'.format(len(valid_tokens)))
+        logger.info('Rejection Vocabulary size: {}'.format(len(invalid_tokens)))
+        # logger.info('Total n-gram tokens created: {}'.format(len(counts)))
+
+        return final_counts
 
     def run(self, corpus, base_limit=1, token_replacement='UNK'):
         """
@@ -231,9 +227,9 @@ class Preprocessor(object):
 
 
 if __name__ == '__main__':
-    a_corpus = "The Cape sparrow (Passer melanurus) is a southern African bird. \n\n " \
+    a_corpus = "The Cape sparrow (Passer melanurus) is a southern African bird. \n" \
                "A medium-sized sparrow at 14–16 centimetres (5.5–6.3 in), it has distinctive grey, brown, and" \
-               " chestnut plumage, with large pale head stripes in both sexes. \n\n " \
+               " chestnut plumage, with large pale head stripes in both sexes. \n " \
                "The male has some bold black and white markings on its head and neck. \n\n " \
                "The species inhabits semi-arid savannah, cultivated areas, and towns, from the central coast of " \
                "Angola to eastern South Africa and Swaziland. \n\n " \
