@@ -1,14 +1,52 @@
-from Assignment1.preprocess import Preprocessor
-from Assignment1.data_fetcher import Fetcher
-from pprint import pprint
-import re
 import itertools
 
-if __name__ == '__main__':
+import numpy as np
 
-    mod_type = 'trigram'
+from Assignment1.data_fetcher import Fetcher
+from Assignment1.evaluation import Evaluation
+from Assignment1.modelling import Model
+from Assignment1.preprocess import Preprocessor
+
+
+def prepare_test_metadata(iterable_of_sentence_tokens, rejected_words, model_n, replacement='<UNK>'):
+    """
+
+    :param iterable_of_sentence_tokens:
+    :param rejected_words:
+    :param model_n:
+    :param replacement:
+    :return:
+    """
+    out = list()
+    counter = 0
+    for sentence_list in iterable_of_sentence_tokens:
+
+        for num in range(len(sentence_list)):
+            if sentence_list[num] in rejected_words:
+                sentence_list[num] = replacement
+
+            counter += 1
+
+        ngrams = Preprocessor.create_ngrams(seq=sentence_list, n=model_n)
+        out.extend(ngrams)
+
+    return out, counter
+
+
+def run_example(mod_type='bigram', smoothing='laplace_smoothing', baselim=5, n_sentences=10000, n_folds=5):
+    """
+
+    :param mod_type:
+    :param smoothing:
+    :param baselim:
+    :param n_sentences:
+    :param n_folds:
+    :return:
+    """
 
     dl_obj = Fetcher(file='europarl-v7.el-en.', language='en')
+
+    model_n = 2 if mod_type == 'bigram' else 3
 
     pre_obj = Preprocessor()
 
@@ -16,66 +54,60 @@ if __name__ == '__main__':
     dataset = dl_obj.load_dataset()
 
     # Splitting the whole dataset into sentences, in order to then split into train and test.
-    sentences = pre_obj.split_to_sentences(dataset)[:1000]
+    sentences = pre_obj.split_to_sentences(dataset)[:n_sentences]
 
     padded_sentences = [pre_obj.tokenize_and_pad(sentence=s, model_type=mod_type) for s in sentences]
 
     # Splitting in train and test sentences. Everything will be stored in Fetcher's object.
     dl_obj.split_in_train_test(padded_sentences)
 
-
     train_sentences = dl_obj.train_data
 
-    train_tokens = itertools.chain(*train_sentences)
+    cross_entropy_res, perplexity_res = list(), list()
 
-    pre_obj.calculate_ngram_counts(mod_type,
-                                   padded_sentences,
-                                   base_limit=3)
-    # print(len(vocabulary_tokens_counts))
-    # print(len(rejection_tokens_counts))
+    for fold in dl_obj.feed_cross_validation(sentences=train_sentences,
+                                             seed=1234,
+                                             k_folds=n_folds):
+        train_padded_sentences = fold["train"]
+        dev_padded_sentences = fold['held_out']
 
-    for i in dl_obj.feed_cross_validation(sentences=train_sentences):
+        training_ngram_counts, rejected_tokens = pre_obj.create_ngram_metadata(mod_type,
+                                                                               train_padded_sentences,
+                                                                               base_limit=baselim)
 
-        train = i["train"]
-        dev = i['held_out']
-        # print(train)
+        dev_prepared_ngrams, test_unigrams_counter = prepare_test_metadata(
+            iterable_of_sentence_tokens=dev_padded_sentences,
+            rejected_words=rejected_tokens,
+            model_n=model_n)
 
-        # count tokens, and create vocabulary-rejection lexicons
+        model_obj = Model(ngrams=training_ngram_counts)
 
-        # # replacing uncommon words in original corpus:
-        # new_corpus = pre_obj.replace_uncommon_words(corpus=train_corpus,
-        #                                             words=rejection_tokens_counts.keys(),
-        #                                             replacement='<UNK>')
-        # pprint(new_corpus)
-        break
+        model_obj.fit_model(smoothing_algo=smoothing)
 
-    # pp = Preprocessor()
-    #
-    # # Load data & split sentences
-    # en_data = dl.load_dataset()
-    # en_sentences = pp.split_to_sentences(en_data)
-    #
-    # # Split data into train, dev and test
-    # dl.split_in_train_dev_test(en_sentences,
-    #                            save_data=True)
-    #
-    # train, dev, test = dl.train_data, dl.dev_data, dl.test_data
-    #
-    # for sentence in train[:10]:
-    #     print(sentence.strip(), end='\n\n')
-    #
-    # a_sentence = "This is a quite large sentence"
-    #
-    # some_sentences = ["This is a sentence",
-    #                   "This is another sentence",
-    #                   "This is new fucking awesome sentence"]
-    #
-    # # Tokenize sentences
-    # res = pp.tokenize_and_pad(a_sentence)
-    #
-    # # Create vocabulary
-    # counts = pp.create_vocabulary(some_sentences)
-    #
-    # # Create n-grams
-    # for i in pp.create_ngrams(a_sentence.split(), 3):
-    #     print(i)
+        probs = model_obj.probs
+
+        eval_obj = Evaluation(probs, dev_prepared_ngrams, test_unigrams_counter)
+
+        eval_obj.compute_model_performance()
+        cross_entropy_res.append(eval_obj.cross_entropy)
+        perplexity_res.append(eval_obj.perplexity)
+
+    mean_cross_entropy = np.mean(cross_entropy_res)
+    mean_perplexity = np.mean(perplexity_res)
+
+    print('Avg Cross Entropy: ', mean_cross_entropy)
+    print('Avg Perplexity: ', mean_perplexity)
+
+
+if __name__ == '__main__':
+
+    mod_type = 'bigram'
+    smoothing = 'laplace_smoothing'
+    baselim = 5
+    nsentences = 10000
+
+    run_example(mod_type=mod_type,
+                smoothing=smoothing,
+                baselim=baselim,
+                n_sentences=nsentences,
+                n_folds=5)
