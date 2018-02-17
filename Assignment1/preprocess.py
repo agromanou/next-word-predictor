@@ -133,7 +133,7 @@ class Preprocessor(object):
         """
         assert n in [1, 2, 3]
 
-        return [seq[i:i + n] for i in range(len(seq) - n + 1)]
+        return [tuple(seq[i:i + n]) for i in range(len(seq) - n + 1)]
 
     def create_ngram_metadata(self, model, list_of_tokens, base_limit):
         """
@@ -162,7 +162,7 @@ class Preprocessor(object):
             # appends each n-gram into a list in order to count them.
             for sublist in sentences_ngrams:
                 for item in sublist:
-                    all_ngrams[num].append(tuple(item))
+                    all_ngrams[num].append(item)
 
         logger.info('Counting all n-grams')
         counts = {}
