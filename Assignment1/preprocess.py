@@ -123,7 +123,19 @@ class Preprocessor(object):
         return tokens
 
     @staticmethod
-    def calculate_ngram_counts(model, list_of_tokens, base_limit):
+    def create_ngrams(seq, n):
+        """
+        This method creates a list of n-grams from a given sentence.
+
+        :param seq: The given sentence.
+        :param n: The length of word tuples
+        :return: The n-grams for a given sentence.
+        """
+        assert n in [1, 2, 3]
+
+        return [seq[i:i + n] for i in range(len(seq) - n + 1)]
+
+    def create_ngram_metadata(self, model, list_of_tokens, base_limit):
         """
 
         :param model:
@@ -133,18 +145,6 @@ class Preprocessor(object):
         """
 
         assert model in ['bigram', 'trigram']
-
-        def create_ngrams(seq, n):
-            """
-            This method creates a list of n-grams from a given sentence.
-
-            :param seq: The given sentence.
-            :param n: The length of word tuples
-            :return: The n-grams for a given sentence.
-            """
-            assert n in [1, 2, 3]
-
-            return [seq[i:i + n] for i in range(len(seq) - n + 1)]
 
         model_n = 2 if model == 'bigram' else 3
         all_ngrams = dict()
@@ -157,7 +157,7 @@ class Preprocessor(object):
             all_ngrams[num] = list()
 
             logger.info("Creating {}-gram tokens for all padded sentences".format(num))
-            sentences_ngrams = map(lambda s: create_ngrams(s, n=num), list_of_tokens)
+            sentences_ngrams = map(lambda s: self.create_ngrams(s, n=num), list_of_tokens)
 
             # appends each n-gram into a list in order to count them.
             for sublist in sentences_ngrams:
@@ -171,59 +171,27 @@ class Preprocessor(object):
             counts[key] = dict(Counter(all_ngrams[key]))
 
         # selecting the rejected tokens
-        invalid_tokens = {k[0] for k, v in counts[1].items() if v < base_limit}
+        rejected_tokens = {k[0] for k, v in counts[1].items() if v < base_limit}
 
         final_counts = dict({i: {} for i in range(1, model_n + 1)})
 
         for n in counts:
             for key_tuple, ngram_count in counts[n].items():
-                new_tuple = key_tuple
-                for r_word in invalid_tokens:
-                    if r_word in key_tuple:
-
-                        # print('ngram', n,
-                        #       'removed word:', r_word,
-                        #       'Counts key:', key_tuple,
-                        #       'Counts value', ngram_count)
-
-                        new_tuple = tuple("UNK" if w == r_word else w for w in key_tuple)
+                new_tuple = tuple()
+                for word in key_tuple:
+                    if word in rejected_tokens:
+                        new_tuple = new_tuple + ("<UNK>",)
+                    else:
+                        new_tuple = new_tuple + (word,)
 
                 final_counts[n][new_tuple] = final_counts[n].get(key_tuple, 0) + ngram_count
 
+        del counts
         # logger.info('Valid Vocabulary size: {}'.format(len(valid_tokens)))
-        logger.info('Rejection Vocabulary size: {}'.format(len(invalid_tokens)))
+        logger.info('Rejection Vocabulary size: {}'.format(len(rejected_tokens)))
         # logger.info('Total n-gram tokens created: {}'.format(len(counts)))
 
-        return final_counts
-
-    def run(self, corpus, base_limit=1, token_replacement='UNK'):
-        """
-
-        :param corpus:
-        :param base_limit:
-        :param token_replacement:
-        :return:
-        """
-
-        # split corpus in tokens
-        tokens = self.tokenize_corpus(corpus)
-
-        # count tokens, and create vocabulary-rejection lexicons
-        vocabulary_tokens_counts, rejection_tokens_counts = self.create_vocabulary(tokens=tokens,
-                                                                                   base_limit=base_limit)
-
-        # replacing uncommon words in original corpus:
-        new_corpus = self.replace_uncommon_words(corpus=corpus,
-                                                 words=rejection_tokens_counts.keys(),
-                                                 replacement=token_replacement)
-
-        # Split new corpus in sentences
-        sentences = self.split_to_sentences(corpus=new_corpus)
-
-        # 2. split sentences in tokens
-        # 4. Replace uncommon words in main corpus with 'replacement' token
-
-        pass
+        return final_counts, rejected_tokens
 
 
 if __name__ == '__main__':
