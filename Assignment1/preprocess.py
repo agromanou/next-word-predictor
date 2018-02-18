@@ -1,13 +1,11 @@
 from collections import Counter
 from pprint import pprint
 from Assignment1 import setup_logger
-from nltk.corpus import stopwords
 from nltk.tokenize import RegexpTokenizer
 
 import re
 
 logger = setup_logger(__name__)
-# logger.disabled = True
 
 
 class Preprocessor(object):
@@ -188,9 +186,9 @@ class Preprocessor(object):
                 new_tuple = tuple()
                 for word in key_tuple:
                     if word in rejected_tokens:
-                        new_tuple = new_tuple + (replacement,)
+                        new_tuple += replacement,
                     else:
-                        new_tuple = new_tuple + (word,)
+                        new_tuple += word,
 
                 final_counts[n][new_tuple] = final_counts[n].get(key_tuple, 0) + ngram_count
 
