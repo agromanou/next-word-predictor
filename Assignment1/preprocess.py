@@ -135,12 +135,12 @@ class Preprocessor(object):
 
         return [tuple(seq[i:i + n]) for i in range(len(seq) - n + 1)]
 
-    def create_ngram_metadata(self, model, list_of_tokens, base_limit):
+    def create_ngram_metadata(self, model, list_of_tokens, threshold):
         """
 
         :param model:
         :param list_of_tokens:
-        :param base_limit:
+        :param threshold:
         :return:
         """
         assert model in ['bigram', 'trigram']
@@ -172,7 +172,7 @@ class Preprocessor(object):
             logger.info('Number of {}-grams: {}'.format(key, len(counts[key])))
 
         # selecting the rejected tokens
-        rejected_tokens = {k[0] for k, v in counts[1].items() if v < base_limit}
+        rejected_tokens = {k[0] for k, v in counts[1].items() if v < threshold}
         logger.info('Rejection Vocabulary size: {}'.format(len(rejected_tokens)))
 
         final_counts = dict({i: {} for i in range(1, model_n + 1)})
