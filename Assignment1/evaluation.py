@@ -1,4 +1,5 @@
 import numpy as np
+import math
 from pprint import pprint
 
 
@@ -23,7 +24,7 @@ class Evaluation(object):
         :return:
         """
         cross_entropy = self.compute_cross_entropy()
-        perplexity = self.compute_perplexity()
+        perplexity = self.compute_perplexity(cross_entropy)
 
         self.cross_entropy = cross_entropy
         self.perplexity = perplexity
@@ -31,22 +32,27 @@ class Evaluation(object):
         return dict(cross_entropy=cross_entropy,
                     perplexity=perplexity)
 
-    def compute_perplexity(self):
+    def compute_perplexity(self, cross_entropy):
         """
         This method computes the perplexity for a given test dataset.
 
         :return:
         """
 
-        total = 0
-        for n_gram in self.data_to_test:
-            total = total + (- np.log(self.model.get(n_gram, 1)))
+        # total = 0
+        # for n_gram in self.data_to_test:
+        #     total += self.model.get(n_gram, 0)
+        # print(total)
+        # print(self.tokens_count)
 
-        return np.power(total, - (1 / self.tokens_count))
+        # return np.power(total, - (1 / self.tokens_count))
+        return math.pow(2, cross_entropy)
 
     def compute_cross_entropy(self):
         """
         This method computes the cross entropy for a given test dataset.
+        CE = sum( p(i,j) * log2(p(j|i)) ) =
+        count(i,j) / count(all_bigrams) * log2( count(i, j) / count(count(i)))
 
         :return:
         """
@@ -55,9 +61,12 @@ class Evaluation(object):
             # pprint(n_gram)
             # pprint(self.model.get(n_gram, 'missing'))
             # vasoume 1 gia na ginei log1 = 0
-            total = total + np.log(self.model.get(n_gram, 1))
+            total -= math.log(self.model.get(n_gram, 1), 2)
+            # total = total + self.model.get(n_gram, 0) * np.log(self.model.get(n_gram, 1))
 
-        return - (total / self.tokens_count)
+        return total / len(self.data_to_test)
+
+        # total / number_of_bigrams
 
 
 if __name__ == '__main__':
