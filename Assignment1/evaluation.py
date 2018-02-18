@@ -49,8 +49,6 @@ class Evaluation(object):
         """
         total = 0
         for n_gram in self.data_to_test:
-            # pprint(n_gram)
-            # pprint(self.model.get(n_gram, 'missing'))
             total -= math.log(self.model[n_gram], 2)
 
         return total / len(self.data_to_test)

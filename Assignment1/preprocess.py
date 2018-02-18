@@ -59,8 +59,15 @@ class Preprocessor(object):
 
         sentence = re.sub('^[^a-zA-z]*|[^a-zA-Z]*$', '', sentence)
 
-        start = ['<s{}>'.format(i) for i in range(1, mapper.get(model_type))]
-        end = ['</s{}>'.format(i) for i in reversed(range(1, mapper.get(model_type)))]
+        if model_type in ['simple', 'bigram']:
+            start = ['<s2>']
+            end = ['</s2>']
+        else:
+            start = ['<s1>', '<s2>']
+            end = ['</s2>', '</s1>']
+
+        # start = ['<s{}>'.format(i) for i in range(1, mapper.get(model_type))]
+        # end = ['</s{}>'.format(i) for i in reversed(range(1, mapper.get(model_type)))]
 
         return start + sentence.split() + end
 

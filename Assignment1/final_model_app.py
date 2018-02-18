@@ -95,8 +95,9 @@ def run_final_model(mod_type='bigram',
 
 
 if __name__ == '__main__':
+
     print("The model is being trained. Please wait for you input...")
-    mod_type = 'trigram'
+    mod_type = 'bigram'
     smoothing = 'laplace_smoothing'
     baselim = 10
     nsentences = 10000
@@ -104,25 +105,26 @@ if __name__ == '__main__':
     obj = run_final_model(mod_type=mod_type,
                           smoothing=smoothing,
                           threshold=baselim,
-                          n_sentences=nsentences)
+                          n_sentences=nsentences,
+                          n_random_sentences_check=5)
 
-    # Run keyword predictor
-    print("Model have been trained!")
-    ngram_setting = int(input('Please select the n-gram setting. \n'
-                              '(Note that you can only set 2 or 3 as n-gram setting) \n \nN-gram setting: '))
-    seq = input('We are all set! '
-                'Now please type a word or a sequence or any text you like! :) \n'
-                '(To exit type the word: <exit>) \n\n')
-
-    while seq != '<exit>':
-        tokens = tuple(seq.split())
-        mle_dict = obj['model_obj'].mle_predict_word(tokens[-(ngram_setting - 1):])
-        print('Next three most probable words:')
-        for element in mle_dict:
-            print('{} : {}'.format(element[0][0], np.round(element[1], 3)))
-        print('\n')
-
-        # print(mle_dict)
-        seq = input("We are all set! "
-                    "Now please type a word a sequence of any text you like! \n"
-                    "(To exit type the word: <exit>) \n\n")
+    # # Run keyword predictor
+    # print("Model have been trained!")
+    # ngram_setting = int(input('Please select the n-gram setting. \n'
+    #                           '(Note that you can only set 2 or 3 as n-gram setting) \n \nN-gram setting: '))
+    # seq = input('We are all set! '
+    #             'Now please type a word or a sequence or any text you like! :) \n'
+    #             '(To exit type the word: <exit>) \n\n')
+    #
+    # while seq != '<exit>':
+    #     tokens = tuple(seq.split())
+    #     mle_dict = obj['model_obj'].mle_predict_word(tokens[-(ngram_setting - 1):])
+    #     print('Next three most probable words:')
+    #     for element in mle_dict:
+    #         print('{} : {}'.format(element[0][0], np.round(element[1], 3)))
+    #     print('\n')
+    #
+    #     # print(mle_dict)
+    #     seq = input("We are all set! "
+    #                 "Now please type a word a sequence of any text you like! \n"
+    #                 "(To exit type the word: <exit>) \n\n")
