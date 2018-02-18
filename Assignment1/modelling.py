@@ -14,9 +14,7 @@ class Model(object):
 
         self.n_model = n_model
         self.ngrams = self.merge_ngram_counts(ngrams)
-        pprint(self.ngrams)
-        print()
-        self.vocabulary = ngrams[1] # will always be the 1-gram counts.
+        self.vocabulary = ngrams[1]  # will always be the 1-gram counts.
         self.tokens_count = sum(self.vocabulary.values())
         self.probs = dict()
         self.smoothed_probs = dict()
@@ -40,7 +38,6 @@ class Model(object):
 
         return super_dict
 
-
     def fit_model(self, smoothing_algo):
         """
         This method runs the modeling process by calculating the Bayes probabilities
@@ -52,7 +49,7 @@ class Model(object):
 
         self.probs = self.calculate_bayes_probs()
         self.perform_smoothing(smoothing_algo)
-        self.linear_interpolation(l1=0.5, l2=0.3, l3=0.2)
+        # self.linear_interpolation(l1=0.5, l2=0.3, l3=0.2)
         self.log_prob()
         self.mle()
 
@@ -150,17 +147,21 @@ class Model(object):
 
             self.trained_model[ngram_to_store] = max_value
 
-    def mle_predict_word(self, word):
+    def mle_predict_word(self, word_tuple):
         """
         This method performs the Maximum Likelihood Estimation algorithm and finds
         the 3 most likely words that will follow a given word.
         :param word: The word we want to find the next one.
         :return: A dictionary with max 3 ordered probabilities and their respective words
         """
-        next_words = {}
-        for k in self.smoothed_probs.keys():
-            if k[0] == word:
-                next_words[k[1]] = self.smoothed_probs[k]
+        next_words = dict()
+        for ngram_tuple in self.probs:
+            if ngram_tuple[:-1] == word_tuple:
+                print(word_tuple, ngram_tuple)
+
+                ending_tuple = ngram_tuple[len(word_tuple):]
+
+                next_words[ending_tuple] = self.probs[ngram_tuple]
 
         sorted_ngams = sorted(next_words.items(), key=operator.itemgetter(1), reverse=True)
 
@@ -221,5 +222,5 @@ if __name__ == '__main__':
     pprint(modelObj.log_probs)
 
     # predict
-    mle_dict = modelObj.mle_predict_word("eat")
+    mle_dict = modelObj.mle_predict_word(("eat",))
     print(mle_dict)
