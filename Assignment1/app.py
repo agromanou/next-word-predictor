@@ -1,11 +1,10 @@
 import numpy as np
 
+from Assignment1 import setup_logger
 from Assignment1.data_fetcher import Fetcher
 from Assignment1.evaluation import Evaluation
 from Assignment1.modelling import Model
 from Assignment1.preprocess import Preprocessor
-from Assignment1 import setup_logger
-from pprint import pprint
 
 logger = setup_logger(__name__)
 
@@ -89,7 +88,7 @@ def run_example(mod_type='bigram',
 
         training_ngram_counts, rejected_tokens = pre_obj.create_ngram_metadata(mod_type,
                                                                                train_padded_sentences,
-                                                                               base_limit=baselim)
+                                                                               threshold=baselim)
 
         dev_prepared_ngrams, dev_unigrams_counter = prepare_test_metadata(
             iterable_of_sentence_tokens=dev_padded_sentences,
