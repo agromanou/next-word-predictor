@@ -17,7 +17,10 @@ def run_final_model(mod_type='bigram',
                     threshold=3,
                     n_sentences=1000,
                     n_random_sentences_check=5,
-                    interpolation=False):
+                    interpolation=False,
+                    kneser_ney_d=0.75,
+                    laplace_k=1):
+
     """
 
     :param mod_type:
@@ -26,6 +29,8 @@ def run_final_model(mod_type='bigram',
     :param n_sentences:
     :param n_random_sentences_check:
     :param interpolation:
+    :param kneser_ney_d:
+    :param laplace_k:
     :return:
     """
 
@@ -66,7 +71,11 @@ def run_final_model(mod_type='bigram',
         rejected_words=rejected_tokens,
         model_n=model_n)
 
-    model_obj = Model(model_ngrams=training_ngram_counts, n_model=model_n, interpolation=interpolation)
+    model_obj = Model(model_ngrams=training_ngram_counts,
+                      n_model=model_n,
+                      interpolation=interpolation,
+                      kneser_ney_d=kneser_ney_d,
+                      laplace_k=laplace_k)
 
     model_obj.fit_model(smoothing_algo=smoothing)
 
@@ -104,7 +113,7 @@ if __name__ == '__main__':
 
     print("The model is being trained. Please wait for you input...")
     mod_type = 'bigram'
-    smoothing = 'laplace_smoothing'
+    smoothing = 'k_n'
     baselim = 10
     nsentences = 10000
 
@@ -113,7 +122,7 @@ if __name__ == '__main__':
                           threshold=baselim,
                           n_sentences=nsentences,
                           n_random_sentences_check=5,
-                          interpolation=True)
+                          interpolation=False)
 
     # # Run keyword predictor
     # print("Model have been trained!")
