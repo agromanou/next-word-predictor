@@ -8,7 +8,7 @@ from numpy import random
 from pprint import pprint
 
 logger = setup_logger(__name__)
-logger.disabled = True
+# logger.disabled = True
 
 
 class Fetcher(object):
@@ -68,7 +68,7 @@ class Fetcher(object):
         test_sentences_size = int(total_len * test_size)
         train_sentences_size = total_len - dev_sentences_size - test_sentences_size
 
-        logger.info('Total number of sentences: {}'.format(len))
+        logger.info('Total number of sentences: {}'.format(total_len))
         logger.info('Training Dataset Size: {}'.format(train_sentences_size))
         logger.info('Development Dataset Size: {}'.format(dev_sentences_size))
         logger.info('Test Dataset Size: {}'.format(test_sentences_size))
@@ -122,7 +122,7 @@ class Fetcher(object):
         test_sentences_size = int(total_len * test_size)
         train_sentences_size = total_len - test_sentences_size
 
-        logger.info('Total number of sentences: {}'.format(len))
+        logger.info('Total number of sentences: {}'.format(total_len))
         logger.info('Training Dataset Size: {}'.format(train_sentences_size))
         logger.info('Test Dataset Size: {}'.format(test_sentences_size))
 
@@ -154,6 +154,7 @@ class Fetcher(object):
 
         """
         This method feeds the train and held_out data-sets in each iteration.
+
         :param sentences: list. An iterable of sentences
         :param seed: Int. A number that helps in the reproduction of the shuffling
         :param k_folds: Int. Number of folds.
@@ -174,6 +175,7 @@ class Fetcher(object):
         split_size = int(total_len / float(k_folds))
         logger.info('Splitting data-set in {} folds'.format(k_folds))
         logger.info('Split size for held out dataset: {}'.format(split_size))
+        logger.info('Split size for training dataset: {}'.format(total_len- split_size))
 
         for i in range(1, k_folds + 1):
 
