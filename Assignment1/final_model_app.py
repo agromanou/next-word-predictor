@@ -1,32 +1,35 @@
+from itertools import chain
+
 import numpy as np
+
+from Assignment1 import setup_logger
+from Assignment1.app import prepare_test_metadata
 from Assignment1.data_fetcher import Fetcher
 from Assignment1.evaluation import Evaluation
 from Assignment1.modelling import Model
 from Assignment1.preprocess import Preprocessor
-from Assignment1 import setup_logger
-from pprint import pprint
-from Assignment1.app import prepare_test_metadata
 
 logger = setup_logger(__name__)
 
 
 def run_final_model(mod_type='bigram',
                     smoothing='laplace_smoothing',
-                    baselim=5,
-                    n_sentences=10000):
+                    threshold=3,
+                    n_sentences=1000,
+                    n_random_sentences_check=5):
     """
 
     :param mod_type:
     :param smoothing:
-    :param baselim:
+    :param threshold:
     :param n_sentences:
-    :param n_folds:
+    :param n_random_sentences_check:
     :return:
     """
 
     logger.info('Running Model for given parameters: ')
-    logger.info('Model N-Grams: {0}, Smoothing Type: {1}, Vocabulary Base Limit: {2}, Number of Sentences: {3}.'.format(
-        mod_type.title(), smoothing.title(), baselim, n_sentences))
+    logger.info('Model N-Grams: {0}, Smoothing Type: {1}, Vocabulary Threshold: {2}, Number of Sentences: {3}.'.format(
+        mod_type.title(), smoothing.title(), threshold, n_sentences))
 
     dl_obj = Fetcher(file='europarl-v7.el-en.', language='en')
 
@@ -50,7 +53,7 @@ def run_final_model(mod_type='bigram',
 
     training_ngram_counts, rejected_tokens = pre_obj.create_ngram_metadata(mod_type,
                                                                            dl_obj.train_data,
-                                                                           base_limit=baselim)
+                                                                           threshold=threshold)
 
     test_prepared_ngrams, test_unigrams_counter = prepare_test_metadata(
         iterable_of_sentence_tokens=dl_obj.test_data,
@@ -72,6 +75,17 @@ def run_final_model(mod_type='bigram',
     logger.info('Avg Cross Entropy: {}'.format(eval_obj.cross_entropy))
     logger.info('Avg Perplexity: {}'.format(eval_obj.perplexity))
 
+    vocabulary_words = set(chain.from_iterable(model_obj.vocabulary.keys())) - {'<s1>', '<s2>', '</s1>', '</s1>'}
+
+    np.random.seed(1234)
+    random_sentences = np.random.choice(a=dl_obj.test_data,
+                                        size=n_random_sentences_check,
+                                        replace=False)
+
+    for sentence_tokens in random_sentences:
+        model_obj.evaluate_on_sentences_pairs(sentence=sentence_tokens,
+                                              vocabulary=list(vocabulary_words))
+
     return {
         'model_obj': model_obj,
         'eval_obj': eval_obj,
@@ -81,22 +95,22 @@ def run_final_model(mod_type='bigram',
 
 
 if __name__ == '__main__':
-    print("The model is trained. Please wait for you input...")
     mod_type = 'bigram'
     smoothing = 'laplace_smoothing'
     baselim = 10
     nsentences = 10000
 
+    print("The model is trained. Please wait for you input...")
     obj = run_final_model(mod_type=mod_type,
                           smoothing=smoothing,
-                          baselim=baselim,
+                          threshold=baselim,
                           n_sentences=nsentences)
 
-    # Run keyword predictor
-    print("Model have been trained!")
-    word = input("Please type a word \n(To exit type the word: <exit>) \n\n")
-    while word != '<exit>':
-        mle_dict = obj['model_obj'].mle_predict_word((word,))
-        print(mle_dict)
-        word = input("Please type a word \n(To exit type the word: <exit>)\n\n ")
-
+    # # Run keyword predictor
+    # print("Model have been trained!")
+    # word = input("Please type a word \n(To exit type the word: <exit>) \n\n")
+    # while word != '<exit>':
+    #     mle_dict = obj['model_obj'].mle_predict_word((word,))
+    #     print(mle_dict)
+    #     word = input("Please type a word \n(To exit type the word: <exit>)\n\n ")
+    #
