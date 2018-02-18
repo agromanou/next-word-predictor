@@ -6,8 +6,10 @@ from Assignment1.data_fetcher import Fetcher
 from Assignment1.evaluation import Evaluation
 from Assignment1.modelling import Model
 from Assignment1.preprocess import Preprocessor
-
+from Assignment1 import setup_logger
 from pprint import pprint
+
+logger = setup_logger(__name__)
 
 
 def prepare_test_metadata(iterable_of_sentence_tokens, rejected_words, model_n, replacement='<UNK>'):
@@ -21,9 +23,10 @@ def prepare_test_metadata(iterable_of_sentence_tokens, rejected_words, model_n, 
     """
     out = list()
     counter = 0
-    for sentence_list in iterable_of_sentence_tokens:
 
+    for sentence_list in iterable_of_sentence_tokens:
         for num in range(len(sentence_list)):
+
             if sentence_list[num] in rejected_words:
                 sentence_list[num] = replacement
 
@@ -31,6 +34,8 @@ def prepare_test_metadata(iterable_of_sentence_tokens, rejected_words, model_n, 
 
         ngrams = Preprocessor.create_ngrams(seq=sentence_list, n=model_n)
         out.extend(ngrams)
+
+    logger.info('Number of test tokens: {}'.format(counter))
 
     return out, counter
 
@@ -46,6 +51,10 @@ def run_example(mod_type='bigram', smoothing='laplace_smoothing', baselim=5, n_s
     :return:
     """
 
+    logger.info('Running Model for given parameters: ')
+    logger.info('Model N-Grams: {0}, Smoothing Type: {1}, Vocabulary Base Limit: {2}, Number of Sentences: {3}.'.format(
+        mod_type.title(), smoothing.title(), baselim, n_sentences))
+
     dl_obj = Fetcher(file='europarl-v7.el-en.', language='en')
 
     model_n = 2 if mod_type == 'bigram' else 3
@@ -54,22 +63,25 @@ def run_example(mod_type='bigram', smoothing='laplace_smoothing', baselim=5, n_s
 
     # loading the whole dataset.
     dataset = dl_obj.load_dataset()
-
     # Splitting the whole dataset into sentences, in order to then split into train and test.
-    sentences = pre_obj.split_to_sentences(dataset)[:n_sentences]
+    sentences = pre_obj.split_to_sentences(dataset)
 
+    logger.info('Extracting {} sentences for execution.'.format(n_sentences))
+    sentences = sentences[:n_sentences]
+
+    logger.info('Applying tokenization and padding for {} sentences'.format(len(sentences)))
     padded_sentences = [pre_obj.tokenize_and_pad(sentence=s, model_type=mod_type) for s in sentences]
 
     # Splitting in train and test sentences. Everything will be stored in Fetcher's object.
     dl_obj.split_in_train_test(padded_sentences)
 
-    train_sentences = dl_obj.train_data
-
     cross_entropy_res, perplexity_res = list(), list()
 
-    for fold in dl_obj.feed_cross_validation(sentences=train_sentences,
+    for fold in dl_obj.feed_cross_validation(sentences=dl_obj.train_data,
                                              seed=1234,
                                              k_folds=n_folds):
+
+        # getting the two data-sets, train and held-out
         train_padded_sentences = fold["train"]
         dev_padded_sentences = fold['held_out']
 
@@ -82,7 +94,8 @@ def run_example(mod_type='bigram', smoothing='laplace_smoothing', baselim=5, n_s
             rejected_words=rejected_tokens,
             model_n=model_n)
 
-        model_obj = Model(ngrams=training_ngram_counts)
+        model_obj = Model(ngrams=training_ngram_counts,
+                          n_model=model_n)
 
         model_obj.fit_model(smoothing_algo=smoothing)
 
@@ -105,7 +118,7 @@ if __name__ == '__main__':
     mod_type = 'bigram'
     smoothing = 'laplace_smoothing'
     baselim = 10
-    nsentences = 100000
+    nsentences = 10000
 
     run_example(mod_type=mod_type,
                 smoothing=smoothing,

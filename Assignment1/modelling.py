@@ -4,10 +4,17 @@ from pprint import pprint
 
 
 class Model(object):
-    def __init__(self, ngrams):
+    def __init__(self, ngrams, n_model=2):
+        """
 
-        self.ngrams = ngrams[2]
-        self.vocabulary = ngrams[1]
+        :param ngrams:
+        :param n_model:
+        """
+
+        self.n_model = n_model
+        self.ngrams = ngrams[self.n_model]
+
+        self.vocabulary = ngrams[1] # will always be the 1-gram counts.
         self.tokens_count = sum(self.vocabulary.values())
         self.probs = dict()
         self.smoothed_probs = dict()
@@ -21,20 +28,12 @@ class Model(object):
         :param smoothing_algo: The name of the smoothing algorithm that will be used.
         :return:
         """
-        assert smoothing_algo in ['laplace_smoothing', 'k_n']
+        assert smoothing_algo in ['laplace_smoothing']
 
         self.probs = self.calculate_bayes_probs()
         self.perform_smoothing(smoothing_algo)
         self.log_prob()
         self.mle()
-
-        # print(self.vocabulary)
-        # print(len(self.vocabulary))
-        # print(self.ngrams)
-        # print(self.probs)
-        # print(self.smoothed_probs)
-        # print(self.log_probs)
-        # print(self.trained_model)
 
     def calculate_bayes_probs(self):
         """

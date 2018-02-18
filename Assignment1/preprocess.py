@@ -7,7 +7,7 @@ from nltk.tokenize import RegexpTokenizer
 import re
 
 logger = setup_logger(__name__)
-logger.disabled = True
+# logger.disabled = True
 
 
 class Preprocessor(object):
@@ -19,13 +19,13 @@ class Preprocessor(object):
     def split_to_sentences(corpus):
         """
         This method splits a corpus into sentences.
+
         :param corpus: str. A textual corpus.
         :return: List. An iterable of sentences (strings).
         """
         logger.info('Splitting Corpus into sentences')
 
-        # splitting the corpus in sentences,
-        # and getting rid of the white spaces at the start and end of each sentence
+        # splitting the corpus in sentences, and getting rid of the white spaces at the start and end of each sentence
         sentences = list(map(lambda s: s.strip().lower(), re.split('\n', corpus)))
         # filtering empty sentences
         filtered = list(filter(None, sentences))
@@ -47,8 +47,10 @@ class Preprocessor(object):
     def tokenize_and_pad(sentence, model_type='simple'):
         """
         This method splits a sentence into tokens. Padding is added if necessary according the model type.
+
         :param sentence: str.
         :param model_type: str. Enum of bigram, trigram, simple
+
         :return: list. An iterable of word tokens.
         """
         assert model_type in ['bigram', 'trigram', 'simple']
@@ -143,8 +145,8 @@ class Preprocessor(object):
         :param base_limit:
         :return:
         """
-
         assert model in ['bigram', 'trigram']
+        logger.info('Running Model: {}'.format(model.title()))
 
         model_n = 2 if model == 'bigram' else 3
         all_ngrams = dict()
@@ -169,27 +171,30 @@ class Preprocessor(object):
         # counting all the different n-grams.
         for key in all_ngrams:
             counts[key] = dict(Counter(all_ngrams[key]))
+            logger.info('Number of {}-grams: {}'.format(key, len(counts[key])))
 
         # selecting the rejected tokens
         rejected_tokens = {k[0] for k, v in counts[1].items() if v < base_limit}
+        logger.info('Rejection Vocabulary size: {}'.format(len(rejected_tokens)))
 
         final_counts = dict({i: {} for i in range(1, model_n + 1)})
+
+        replacement="<UNK>"
+
+        logger.info('Replacing Rejection words with {}'.format(replacement))
 
         for n in counts:
             for key_tuple, ngram_count in counts[n].items():
                 new_tuple = tuple()
                 for word in key_tuple:
                     if word in rejected_tokens:
-                        new_tuple = new_tuple + ("<UNK>",)
+                        new_tuple = new_tuple + (replacement,)
                     else:
                         new_tuple = new_tuple + (word,)
 
                 final_counts[n][new_tuple] = final_counts[n].get(key_tuple, 0) + ngram_count
 
         del counts
-        # logger.info('Valid Vocabulary size: {}'.format(len(valid_tokens)))
-        logger.info('Rejection Vocabulary size: {}'.format(len(rejected_tokens)))
-        # logger.info('Total n-gram tokens created: {}'.format(len(counts)))
 
         return final_counts, rejected_tokens
 
