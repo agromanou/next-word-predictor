@@ -3,6 +3,8 @@ import operator
 from pprint import pprint
 from collections import defaultdict
 from Assignment1 import setup_logger
+import random
+from Assignment1.preprocess import Preprocessor
 
 logger = setup_logger(__name__)
 
@@ -124,9 +126,9 @@ class Model(object):
         """
         assert (l1 + l2 + l3 == 1)
         self.interpolated_probs = dict(map(lambda k: (
-            l1 * self.smoothed_probs[k] +
-            l2 * self.smoothed_probs[k] +
-            l3 * self.smoothed_probs[k]), self.smoothed_probs))
+                l1 * self.smoothed_probs[k] +
+                l2 * self.smoothed_probs[k] +
+                l3 * self.smoothed_probs[k]), self.smoothed_probs))
 
     def log_prob(self):
         """
@@ -203,6 +205,68 @@ class Model(object):
 
         self.test_probs = test_probs
         return test_probs
+
+    def compute_sum_of_probability(self, ngrams):
+        """
+
+        :param ngrams:
+        :return:
+        """
+        sum_of_probs = -sum(map(np.log,
+                                self.get_test_ngrams_smoothed_probs(test_ngram_tuples=ngrams).values()))
+
+        return sum_of_probs
+
+    def create_wrong_sentence(self, n_words, vocabulary):
+        """
+
+        :param n_words:
+        :param vocabulary:
+        :param n_model:
+        :return:
+        """
+
+        tokens = list()
+
+        for words in range(n_words):
+            tokens.append(random.choice(vocabulary))
+
+        start = ['<s{}>'.format(i) for i in range(1, self.n_model)]
+        end = ['</s{}>'.format(i) for i in reversed(range(1, self.n_model))]
+
+        return start + tokens + end
+
+    def evaluate_on_sentences_pairs(self, sentence, vocabulary):
+        """
+
+        :param sentences:
+        :param vocabulary:
+        :return:
+        """
+        filtered_correct = [t for t in sentence if t not in ['<s1>', '<s2>', '</s1>', '</s1>']]
+
+        correct_sentence_len = len(filtered_correct)
+
+        random_sentence_tokens = self.create_wrong_sentence(n_words=correct_sentence_len,
+                                                            vocabulary=vocabulary)
+
+        random_sentence_ngrams = Preprocessor.create_ngrams(seq=random_sentence_tokens,
+                                                            n=self.n_model)
+
+        correct_sentence_ngrams = Preprocessor.create_ngrams(seq=sentence,
+                                                             n=self.n_model)
+
+        filtered_random = [t for t in random_sentence_tokens if t not in ['<s1>', '<s2>', '</s1>', '</s1>']]
+
+        random_sum_of_log_probs = self.compute_sum_of_probability(ngrams=random_sentence_ngrams)
+
+        correct_sum_of_log_probs = self.compute_sum_of_probability(ngrams=correct_sentence_ngrams)
+
+        logger.info('Correct Sentence: "{}."'.format(' '.join(filtered_correct).capitalize()))
+        logger.info('Correct Sentence Sum of Log Probs: {}.'.format(correct_sum_of_log_probs))
+
+        logger.info('Random Sentence: "{}."'.format(' '.join(filtered_random).capitalize()))
+        logger.info('Random Sentence Sum of Log Probs: {}.'.format(random_sum_of_log_probs))
 
 
 if __name__ == '__main__':
