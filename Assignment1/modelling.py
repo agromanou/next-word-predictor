@@ -61,9 +61,6 @@ class Model(object):
         :param voc: A dictionary with each unique word and their frequencies.
         :return: A dictionary with the bayes probabilities for each ngram tuple.
         """
-        for ngram_tuple in self.ngrams:
-            print(self.ngrams[ngram_tuple], self.vocabulary.get(ngram_tuple[:-1], self.tokens_count))
-
         return dict(
             map(lambda ngram_tuple: (ngram_tuple,
                                      self.ngrams[ngram_tuple] / self.vocabulary.get(ngram_tuple[:-1],
@@ -147,11 +144,13 @@ class Model(object):
 
             self.trained_model[ngram_to_store] = max_value
 
-    def mle_predict_word(self, word_tuple):
+    def mle_predict_word(self, word_tuple, n_suggestions=3):
         """
         This method performs the Maximum Likelihood Estimation algorithm and finds
-        the 3 most likely words that will follow a given word.
-        :param word: The word we want to find the next one.
+        the top N most likely words that will follow a given word.
+
+        :param word_tuple: The word we want to find the next one.
+        :param n_suggestions: int. The top N most probable words
         :return: A dictionary with max 3 ordered probabilities and their respective words
         """
         next_words = dict()
@@ -165,7 +164,7 @@ class Model(object):
 
         sorted_ngams = sorted(next_words.items(), key=operator.itemgetter(1), reverse=True)
 
-        return sorted_ngams
+        return sorted_ngams[:n_suggestions]
 
 
 if __name__ == '__main__':
