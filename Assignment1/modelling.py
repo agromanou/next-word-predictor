@@ -1,6 +1,7 @@
 import numpy as np
 import operator
 from pprint import pprint
+from collections import defaultdict
 
 
 class Model(object):
@@ -12,7 +13,7 @@ class Model(object):
         """
 
         self.n_model = n_model
-        self.ngrams = ngrams[self.n_model]
+        self.ngrams = self.merge_ngram_counts(ngrams)
 
         self.vocabulary = ngrams[1] # will always be the 1-gram counts.
         self.tokens_count = sum(self.vocabulary.values())
@@ -21,6 +22,23 @@ class Model(object):
         self.interpolated_probs = dict()
         self.log_probs = dict()
         self.trained_model = dict()
+
+    @staticmethod
+    def merge_ngram_counts(ngrams):
+        """
+
+        :return:
+        """
+        super_dict = defaultdict(set)  # uses set to avoid duplicates
+
+        list_of_dicts = ngrams.values()
+
+        for d in list_of_dicts:
+            for k, v in d.items():
+                super_dict[k].add(v)
+
+        return super_dict
+
 
     def fit_model(self, smoothing_algo):
         """
@@ -46,7 +64,7 @@ class Model(object):
         :return: A dictionary with the bayes probabilities for each ngram tuple.
         """
         return dict(
-            map(lambda ngram_tuple: (ngram_tuple, self.ngrams[ngram_tuple] / self.vocabulary[(ngram_tuple[0],)]),
+            map(lambda ngram_tuple: (ngram_tuple, self.ngrams[ngram_tuple] / self.vocabulary[(ngram_tuple[:-1],)]),
                 self.ngrams))
 
     def perform_smoothing(self, smoothing_algo):
