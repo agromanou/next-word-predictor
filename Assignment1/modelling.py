@@ -10,18 +10,21 @@ logger = setup_logger(__name__)
 
 
 class Model(object):
-    def __init__(self, model_ngrams, n_model=2, interpolation=False):
-        """
-
-        :param model_ngrams:
-        :param n_model:
-        :param interpolation:
-        """
+    def __init__(self,
+                 model_ngrams,
+                 n_model=2,
+                 laplace_k=2,
+                 kneser_ney_d=0.75,
+                 interpolation=False):
 
         self.n_model = n_model
         self.interpolation = interpolation
-        self.model_ngrams = self.merge_ngram_counts(model_ngrams)
+        self.laplace_k = laplace_k
+        self.knener_ney_d = kneser_ney_d
+
+        self.model_ngrams_raw = model_ngrams
         self.vocabulary = model_ngrams[1]  # will always be the 1-gram counts.
+        self.model_ngrams = self.merge_ngram_counts(model_ngrams)  # merged ngram tuples.
 
         self.tokens_count = sum(self.vocabulary.values())
 
@@ -55,7 +58,7 @@ class Model(object):
         :param smoothing_algo: The name of the smoothing algorithm that will be used.
         :return:
         """
-        assert smoothing_algo in ['laplace_smoothing']
+        assert smoothing_algo in ['laplace_smoothing', 'k_n']
 
         # calculation bayes probabilities
         self.probs = self.calculate_bayes_probs()
@@ -92,11 +95,11 @@ class Model(object):
         """
         if smoothing_algo == "laplace_smoothing":
             logger.info("Running Laplace smoothing process...")
-            self.smoothed_probs = self.laplace_smoothing()
+            self.smoothed_probs = self.laplace_smoothing(add_k=self.laplace_k)
 
         elif smoothing_algo == "k_n":
             logger.info("Running Kneser-Ney smoothing process...")
-            self.smoothed_probs = self.kneser_ney_smoothing()
+            self.smoothed_probs = self.kneser_ney_smoothing(d=self.knener_ney_d)
         else:
             logger.warning("Please choose a valid smoothing method.")
 
@@ -117,12 +120,73 @@ class Model(object):
 
         return dict(lp)
 
-    def kneser_ney_smoothing(self):
+    def kneser_ney_smoothing(self, d):
         """
 
+        :param d:
         :return:
         """
-        return self.probs
+
+        if self.n_model == 2:
+
+            smoothed_probs_dict = dict()
+
+            for ngram_t in self.model_ngrams_raw[2]:
+                dict_values1 = {v for t, v in self.model_ngrams_raw[2].items() if t[0] == ngram_t[0]}
+
+                dict_values_sum1 = sum(dict_values1)
+                if dict_values_sum1 == 0:
+                    dict_values_sum1 += 1
+
+                dict_values_count1 = len(dict_values1)
+
+                dict_values2 = {v for t, v in self.model_ngrams_raw[2].items() if t[1] == ngram_t[0]}
+                dict_values_count2 = len(dict_values2)
+
+                max = np.max(self.model_ngrams[ngram_t] - d, 0)
+
+                l = (d * dict_values_count1) / dict_values_sum1
+                k_n = (max / (self.model_ngrams[ngram_t[:-1]])) + (
+                        (l * dict_values_count2) / len(self.model_ngrams_raw[2]))
+
+                smoothed_probs_dict[ngram_t] = k_n
+
+        elif self.n_model == 3:
+
+            smoothed_probs_dict = dict()
+
+            for ngram_t in self.model_ngrams_raw[3]:
+
+                dict_values1 = {v for t, v in self.model_ngrams_raw[3].items() if t[:-1] == ngram_t[:-1]}
+
+                dict_values_sum1 = sum(dict_values1)
+                if dict_values_sum1 == 0:
+                    dict_values_sum1 += 1
+
+                dict_values_count1 = len(dict_values1)
+
+                dict_values2 = {v for t, v in self.model_ngrams_raw[3].items() if t[-2:] == ngram_t[:-1]}
+                dict_values_count2 = len(dict_values2)
+
+                if dict_values_count2 ==0 :
+                    dict_values_count2 +=1
+
+                max = np.max(self.model_ngrams[ngram_t] - d, 0)
+
+                l = (d * dict_values_count1) / dict_values_sum1
+                k_n = (max / (self.model_ngrams[ngram_t[:-1]])) + (
+                        (l * dict_values_count2) / len(self.model_ngrams_raw[2]))
+
+                smoothed_probs_dict[ngram_t] = k_n
+
+
+
+        else:
+            raise NotImplementedError('Sorry, next time!')
+
+        print('adsfasdfasf')
+        print(smoothed_probs_dict)
+        return smoothed_probs_dict
 
     def linear_interpolation(self, l1, l2, l3):
         """
@@ -305,6 +369,7 @@ class Model(object):
 
 if __name__ == '__main__':
     print("The model is trained. Please wait for you input...")
+
     # Test case with the following dictionaries
     tokens = ["<s>", "i", "want", "to", "eat", "chinese", "food", "lunch", "spend", "</s>",
               "<s>", "i", "want", "to", "eat", "chinese", "food", "lunch", "spend", "</s>",
@@ -378,10 +443,11 @@ if __name__ == '__main__':
                      ('food', '</s2>', '</s1>')]
 
     # Create a model object with the dictionaries above
-    modelObj = Model(train_example_ngrams, n_model=3, interpolation=True)
+    modelObj = Model(train_example_ngrams, n_model=3, interpolation=False, kneser_ney_d=0.75)
 
     # fit model to data
-    modelObj.fit_model("laplace_smoothing")
+    # modelObj.fit_model(smoothing_algo="laplace_smoothing")
+    modelObj.fit_model(smoothing_algo="k_n")
     pprint(modelObj.probs)
     print()
     pprint(modelObj.smoothed_probs)
