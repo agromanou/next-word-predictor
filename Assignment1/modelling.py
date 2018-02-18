@@ -8,7 +8,7 @@ logger = setup_logger(__name__)
 
 
 class Model(object):
-    def __init__(self, model_ngrams, test_ngram_tuples, n_model=2):
+    def __init__(self, model_ngrams, n_model=2):
         """
 
         :param model_ngrams:
@@ -17,7 +17,6 @@ class Model(object):
         """
 
         self.n_model = n_model
-        self.test_ngram_tuples = test_ngram_tuples
 
         self.model_ngrams = self.merge_ngram_counts(model_ngrams)
         self.vocabulary = model_ngrams[1]  # will always be the 1-gram counts.
@@ -25,6 +24,7 @@ class Model(object):
         self.tokens_count = sum(self.vocabulary.values())
 
         self.probs = dict()
+        self.test_probs = dict()
         self.smoothed_probs = dict()
         self.interpolated_probs = dict()
         self.log_probs = dict()
@@ -56,16 +56,16 @@ class Model(object):
         assert smoothing_algo in ['laplace_smoothing']
 
         self.probs = self.calculate_bayes_probs()
+        self.perform_smoothing(smoothing_algo)
         # self.linear_interpolation(l1=0.5, l2=0.3, l3=0.2)
-        self.log_prob()
+        # self.log_prob()
         self.mle()
 
     def calculate_bayes_probs(self):
         """
         This methods calculates the Bayes probability for each ngram using
         the following equation: P(w2 | w1) = count(w1, w2) / count(w1).
-        :param grams: A dictionary with pairs of words and their frequencies
-        :param voc: A dictionary with each unique word and their frequencies.
+
         :return: A dictionary with the bayes probabilities for each ngram tuple.
         """
         pr = map(lambda ngram_tuple: (ngram_tuple,
@@ -83,11 +83,11 @@ class Model(object):
         :return:
         """
         if smoothing_algo == "laplace_smoothing":
-            logger.info("Running Laplace smoothing process..")
+            logger.info("Running Laplace smoothing process...")
             self.smoothed_probs = self.laplace_smoothing()
 
         elif smoothing_algo == "k_n":
-            logger.info("Running Kneser-Ney smoothing process..")
+            logger.info("Running Kneser-Ney smoothing process...")
             self.smoothed_probs = self.kneser_ney_smoothing()
 
         else:
@@ -106,7 +106,7 @@ class Model(object):
                                       (self.model_ngrams.get(ngram_tuple, 0) + add_k) /
                                       (self.model_ngrams.get(ngram_tuple[:-1],
                                                              self.tokens_count) + len(self.vocabulary))),
-                 self.test_ngram_tuples)
+                 self.model_ngrams)
 
         return dict(lp)
 
@@ -195,53 +195,85 @@ if __name__ == '__main__':
                        "<s>": 4,
                        "</s>": 4}
 
-    ngrams = {1: {('<s>',): 4,
-                  ('i',): 4,
-                  ('want',): 4,
-                  ('to',): 4,
-                  ('eat',): 4,
-                  ('chinese',): 1,
-                  ('food',): 1,
-                  ('lunch',): 1,
-                  ('spend',): 1,
-                  ('</s>',): 4},
-              2:
-                  {('<s>', 'i'): 4,
-                   ('i', 'want'): 4,
-                   ('want', 'to'): 4,
-                   ('to', 'eat'): 4,
-                   ('eat', 'chinese'): 1,
-                   ('eat', '</s>'): 3,
-                   ('chinese', 'food'): 1,
-                   ('food', 'lunch'): 1,
-                   ('lunch', 'spend'): 1,
-                   ('spend', '</s>'): 1}
-              }
+    train_example_ngrams = {1: {('<s2>',): 4,
+                                ('i',): 4,
+                                ('want',): 4,
+                                ('to',): 4,
+                                ('eat',): 4,
+                                ('chinese',): 1,
+                                ('food',): 1,
+                                ('lunch',): 1,
+                                ('spend',): 1,
+                                ('</s2>',): 4},
+                            2:
+                                {('<s2>', 'i'): 4,
+                                 ('i', 'want'): 4,
+                                 ('want', 'to'): 4,
+                                 ('to', 'eat'): 4,
+                                 ('eat', 'chinese'): 1,
+                                 ('eat', '</s2>'): 3,
+                                 ('chinese', 'food'): 1,
+                                 ('food', 'lunch'): 1,
+                                 ('lunch', 'spend'): 1,
+                                 ('spend', '</s2>'): 1},
 
-    test_ngram = [('<s>', 'i'),
-                  ('i', 'want'),
-                  ('want', 'to'),
-                  ('to', 'eat'),
-                  ('eat', 'greek'),
-                  ('greek', 'food'),
-                  ('food', '</s>')]
+                            3: {('<s1>', '<s2>', 'i'): 4,
+                                ('<s2>', 'i', 'want'): 4,
+                                ('i', 'want', 'to'): 4,
+                                ('want', 'to', 'eat'): 4,
+                                ('to', 'eat', '</s2>'): 1,
+                                ('to', 'eat', 'chinese'): 3,
+                                ('eat', 'chinese', 'food'): 3,
+                                ('chinese', 'food', 'lunch'): 3,
+                                ('food', 'lunch', 'spend'): 3,
+                                ('lunch', 'spend', '</s2>'): 3,
+                                ('spend', '</s2>', '</s1>'): 3,
+                                ('eat', '</s2>', '</s1>'): 1,
+
+                                }
+                            }
+
+    test_bigrams = [('<s>', 'i'),
+                    ('i', 'want'),
+                    ('want', 'to'),
+                    ('to', 'eat'),
+                    ('eat', 'greek'),
+                    ('greek', 'food'),
+                    ('food', '</s>')]
+
+    test_trigrams = [('<s1>', '<s2>', 'i'),
+                     ('<s2>', 'i', 'want'),
+                     ('i', 'want', 'to'),
+                     ('want', 'to', 'eat'),
+                     ('to', 'eat', 'greek'),
+                     ('eat', 'greek', 'food'),
+                     ('greek', 'food', '</s2>'),
+                     ('food', '</s2>', '</s1>')]
 
     # Create a model object with the dictionaries above
-    modelObj = Model(ngrams, test_ngram_tuples=test_ngram, n_model=2)
+    modelObj = Model(train_example_ngrams, n_model=3)
 
     # fit model to data
     modelObj.fit_model("laplace_smoothing")
     print()
-    laplace = modelObj.laplace_smoothing(add_k=1)
-    pprint(laplace)
-    print()
+    print('Probs')
     pprint(modelObj.probs)
     print()
+    print('Smoothed')
     pprint(modelObj.smoothed_probs)
     print()
-    pprint(modelObj.log_probs)
-    print()
 
-    predict
-    mle_dict = modelObj.mle_predict_word(("eat",))
+    print('Checking test probs')
+    modelObj.get_test_ngrams_smoothed_probs(test_ngram_tuples=test_trigrams)
+    pprint(modelObj.test_probs)
+    # predict
+    mle_dict = modelObj.mle_predict_word(('to', 'eat'))
     print(mle_dict)
+
+    from Assignment1.evaluation import Evaluation
+    #
+    # eval_obj = Evaluation(model_to_test=modelObj.smoothed_probs,
+    #                       data_to_test=test_ngrams,
+    #                       tokens_count=modelObj.tokens_count)
+    #
+    # pprint(eval_obj.compute_model_performance())
