@@ -18,6 +18,7 @@ class Model(object):
         self.tokens_count = sum(self.vocabulary.values())
         self.probs = dict()
         self.smoothed_probs = dict()
+        self.interpolated_probs = dict()
         self.log_probs = dict()
         self.trained_model = dict()
 
@@ -32,6 +33,7 @@ class Model(object):
 
         self.probs = self.calculate_bayes_probs()
         self.perform_smoothing(smoothing_algo)
+        self.linear_interpolation(l1=0.5, l2=0.3, l3=0.2)
         self.log_prob()
         self.mle()
 
@@ -73,8 +75,9 @@ class Model(object):
         :return: A dictionary with the smoothed probabilities for each ngram tuple
         """
         pl = dict(
-            map(lambda c: (c[0], (c[1] + add_k) / (self.tokens_count + add_k * len(self.vocabulary))),
-                self.probs.items()))
+            map(lambda ngram_tuple: (ngram_tuple, (self.ngrams[ngram_tuple] + add_k) /
+                                     (self.vocabulary[(ngram_tuple[0],)] + len(self.vocabulary))), self.ngrams))
+
         return pl
 
     def kneser_ney_smoothing(self):
@@ -84,13 +87,23 @@ class Model(object):
         """
         return self.probs
 
+    def linear_interpolation(self, l1, l2, l3):
+        """
+
+        :return:
+        """
+        assert (l1 + l2 + l3 == 1)
+        self.interpolated_probs = dict(map(lambda k: (
+            l1 * self.smoothed_probs[k] +
+            l2 * self.smoothed_probs[k] +
+            l3 * self.smoothed_probs[k]), self.smoothed_probs))
+
     def log_prob(self):
         """
 
         :return: A dictionary with the logged probabilities for each ngram tuple
         """
-        log_prob = dict(map(lambda k: (k, - np.log(self.smoothed_probs[k])), self.smoothed_probs))
-        self.log_probs = log_prob
+        self.log_probs = dict(map(lambda k: (k, - np.log(self.smoothed_probs[k])), self.smoothed_probs))
 
     def mle(self):
         """
@@ -148,24 +161,40 @@ if __name__ == '__main__':
                        "<s>": 4,
                        "</s>": 4}
 
-    ngrams = {('<s>', 'i'): 4,
-              ('i', 'want'): 4,
-              ('want', 'to'): 4,
-              ('to', 'eat'): 4,
-              ('eat', 'chinese'): 3,
-              ('eat', '</s>'): 1,
-              ('chinese', 'food'): 3,
-              ('food', 'lunch'): 3,
-              ('lunch', 'spend'): 3,
-              ('spend', '</s>'): 3}
+    ngrams = {1: {('<s>',): 4,
+                  ('i',): 4,
+                  ('want',): 4,
+                  ('to',): 4,
+                  ('eat',): 4,
+                  ('chinese',): 1,
+                  ('food',): 1,
+                  ('lunch',): 1,
+                  ('spend',): 1,
+                  ('</s>',): 4},
+              2:
+                  {('<s>', 'i'): 4,
+                   ('i', 'want'): 4,
+                   ('want', 'to'): 4,
+                   ('to', 'eat'): 4,
+                   ('eat', 'chinese'): 1,
+                   ('eat', '</s>'): 3,
+                   ('chinese', 'food'): 1,
+                   ('food', 'lunch'): 1,
+                   ('lunch', 'spend'): 1,
+                   ('spend', '</s>'): 1}
+              }
 
     # Create a model object with the dictionaries above
-    modelObj = Model(vocabulary_freq,
-                     tokens,
-                     ngrams)
+    modelObj = Model(ngrams)
 
     # fit model to data
     modelObj.fit_model("laplace_smoothing")
+
+    pprint(modelObj.probs)
+    print()
+    pprint(modelObj.smoothed_probs)
+    print()
+    pprint(modelObj.log_probs)
 
     # predict
     mle_dict = modelObj.mle_predict_word("eat")

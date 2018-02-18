@@ -39,13 +39,6 @@ class Evaluation(object):
         :return:
         """
 
-        # total = 0
-        # for n_gram in self.data_to_test:
-        #     total += self.model.get(n_gram, 0)
-        # print(total)
-        # print(self.tokens_count)
-
-        # return np.power(total, - (1 / self.tokens_count))
         return math.pow(2, cross_entropy)
 
     def compute_cross_entropy(self):
@@ -62,11 +55,8 @@ class Evaluation(object):
             # pprint(self.model.get(n_gram, 'missing'))
             # vasoume 1 gia na ginei log1 = 0
             total -= math.log(self.model.get(n_gram, 1), 2)
-            # total = total + self.model.get(n_gram, 0) * np.log(self.model.get(n_gram, 1))
 
         return total / len(self.data_to_test)
-
-        # total / number_of_bigrams
 
 
 if __name__ == '__main__':

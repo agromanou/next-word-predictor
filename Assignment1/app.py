@@ -99,7 +99,7 @@ def run_example(mod_type='bigram', smoothing='laplace_smoothing', baselim=5, n_s
 
         model_obj.fit_model(smoothing_algo=smoothing)
 
-        probs = model_obj.probs
+        probs = model_obj.smoothed_probs
 
         eval_obj = Evaluation(probs, dev_prepared_ngrams, test_unigrams_counter)
 
