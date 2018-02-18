@@ -53,14 +53,14 @@ class Preprocessor(object):
         """
         assert model_type in ['bigram', 'trigram', 'simple']
 
-        mapper = {'simple': 1,
+        mapper = {'simple': 2,
                   'bigram': 2,
                   'trigram': 3}
 
         sentence = re.sub('^[^a-zA-z]*|[^a-zA-Z]*$', '', sentence)
 
         start = ['<s{}>'.format(i) for i in range(1, mapper.get(model_type))]
-        end = ['</s{}>'.format(i) for i in range(1, mapper.get(model_type))]
+        end = ['</s{}>'.format(i) for i in reversed(range(1, mapper.get(model_type)))]
 
         return start + sentence.split() + end
 
@@ -215,6 +215,6 @@ if __name__ == '__main__':
                "The Cape sparrow's population has not decreased significantly, and is not " \
                "seriously threatened by human activities. "
 
-    test_counts = Preprocessor().run(corpus=a_corpus)
+    test_counts = Preprocessor().tokenize_and_pad(sentence=a_corpus, model_type='bigram')
 
     pprint(test_counts)
