@@ -16,7 +16,8 @@ def run_final_model(mod_type='bigram',
                     smoothing='laplace_smoothing',
                     threshold=3,
                     n_sentences=1000,
-                    n_random_sentences_check=5):
+                    n_random_sentences_check=5,
+                    interpolation=False):
     """
 
     :param mod_type:
@@ -24,12 +25,17 @@ def run_final_model(mod_type='bigram',
     :param threshold:
     :param n_sentences:
     :param n_random_sentences_check:
+    :param interpolation:
     :return:
     """
 
     logger.info('Running Model for given parameters: ')
-    logger.info('Model N-Grams: {0}, Smoothing Type: {1}, Vocabulary Threshold: {2}, Number of Sentences: {3}.'.format(
-        mod_type.title(), smoothing.title(), threshold, n_sentences))
+    logger.info('Model N-Grams: {0}, '
+                'Smoothing Type: {1},'
+                ' Vocabulary Threshold: {2},'
+                ' Number of Sentences: {3}, '
+                'Interpolation: {4}.'.format(
+        mod_type.title(), smoothing.title(), threshold, n_sentences, interpolation))
 
     dl_obj = Fetcher(file='europarl-v7.el-en.', language='en')
 
@@ -60,7 +66,7 @@ def run_final_model(mod_type='bigram',
         rejected_words=rejected_tokens,
         model_n=model_n)
 
-    model_obj = Model(model_ngrams=training_ngram_counts, n_model=model_n)
+    model_obj = Model(model_ngrams=training_ngram_counts, n_model=model_n, interpolation=interpolation)
 
     model_obj.fit_model(smoothing_algo=smoothing)
 
@@ -106,7 +112,8 @@ if __name__ == '__main__':
                           smoothing=smoothing,
                           threshold=baselim,
                           n_sentences=nsentences,
-                          n_random_sentences_check=5)
+                          n_random_sentences_check=5,
+                          interpolation=True)
 
     # # Run keyword predictor
     # print("Model have been trained!")

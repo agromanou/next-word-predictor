@@ -10,16 +10,16 @@ logger = setup_logger(__name__)
 
 
 class Model(object):
-    def __init__(self, model_ngrams, n_model=2):
+    def __init__(self, model_ngrams, n_model=2, interpolation=False):
         """
 
         :param model_ngrams:
-        :param test_ngram_tuples:
         :param n_model:
+        :param interpolation:
         """
 
         self.n_model = n_model
-
+        self.interpolation = interpolation
         self.model_ngrams = self.merge_ngram_counts(model_ngrams)
         self.vocabulary = model_ngrams[1]  # will always be the 1-gram counts.
 
@@ -57,11 +57,17 @@ class Model(object):
         """
         assert smoothing_algo in ['laplace_smoothing']
 
+        # calculation bayes probabilities
         self.probs = self.calculate_bayes_probs()
+
+        # performing smoothing
         self.perform_smoothing(smoothing_algo)
-        # self.linear_interpolation(l1=0.5, l2=0.3, l3=0.2)
-        # self.log_prob()
-        self.mle()
+
+        if self.interpolation:
+            # perfoming interpolation
+            self.interpolated_probs = self.linear_interpolation(l1=(1 / 3),
+                                                                l2=(1 / 3),
+                                                                l3=(1 / 3))
 
     def calculate_bayes_probs(self):
         """
@@ -91,7 +97,6 @@ class Model(object):
         elif smoothing_algo == "k_n":
             logger.info("Running Kneser-Ney smoothing process...")
             self.smoothed_probs = self.kneser_ney_smoothing()
-
         else:
             logger.warning("Please choose a valid smoothing method.")
 
@@ -125,10 +130,19 @@ class Model(object):
         :return:
         """
         assert (l1 + l2 + l3 == 1)
-        self.interpolated_probs = dict(map(lambda k: (
-                l1 * self.smoothed_probs[k] +
-                l2 * self.smoothed_probs[k] +
-                l3 * self.smoothed_probs[k]), self.smoothed_probs))
+
+        intepolated_probs = dict()
+        for ngram_t in self.smoothed_probs:
+            intepolated_probs[ngram_t] = sum([l3 * self.smoothed_probs.get(ngram_t, 0),
+                                              l2 * self.smoothed_probs.get(ngram_t[:-1], 0),
+                                              l1 * self.smoothed_probs.get(ngram_t[:-2], 0)])
+
+        # self.interpolated_probs = dict(map(lambda k: (
+        #         l1 * self.smoothed_probs[k] +
+        #         l2 * self.smoothed_probs[k] +
+        #         l3 * self.smoothed_probs[k]), self.smoothed_probs))
+
+        return intepolated_probs
 
     def log_prob(self):
         """
@@ -186,22 +200,42 @@ class Model(object):
         """
         test_probs = dict()
 
-        for ngram_t in test_ngram_tuples:
+        if self.interpolation:
 
-            if self.smoothed_probs.get(ngram_t):
-                test_probs[ngram_t] = self.smoothed_probs.get(ngram_t)
+            for ngram_t in test_ngram_tuples:
 
-            else:
-                if self.smoothed_probs.get(ngram_t[:-1]):
+                if self.interpolated_probs.get(ngram_t):
+                    test_probs[ngram_t] = self.interpolated_probs.get(ngram_t)
 
-                    test_probs[ngram_t] = 1 / (self.model_ngrams[ngram_t[:-1]] + len(self.vocabulary))
                 else:
+                    if self.interpolated_probs.get(ngram_t[:-1]):
 
-                    if self.smoothed_probs.get(ngram_t[:-2]):
-
-                        test_probs[ngram_t] = 1 / (self.model_ngrams[ngram_t[:-2]] + len(self.vocabulary))
+                        test_probs[ngram_t] = 1 / (self.model_ngrams[ngram_t[:-1]] + len(self.vocabulary))
                     else:
-                        test_probs[ngram_t] = 1 / (self.tokens_count + len(self.vocabulary))
+
+                        if self.interpolated_probs.get(ngram_t[:-2]):
+
+                            test_probs[ngram_t] = 1 / (self.model_ngrams[ngram_t[:-2]] + len(self.vocabulary))
+                        else:
+                            test_probs[ngram_t] = 1 / (self.tokens_count + len(self.vocabulary))
+        else:
+
+            for ngram_t in test_ngram_tuples:
+
+                if self.smoothed_probs.get(ngram_t):
+                    test_probs[ngram_t] = self.smoothed_probs.get(ngram_t)
+
+                else:
+                    if self.smoothed_probs.get(ngram_t[:-1]):
+
+                        test_probs[ngram_t] = 1 / (self.model_ngrams[ngram_t[:-1]] + len(self.vocabulary))
+                    else:
+
+                        if self.smoothed_probs.get(ngram_t[:-2]):
+
+                            test_probs[ngram_t] = 1 / (self.model_ngrams[ngram_t[:-2]] + len(self.vocabulary))
+                        else:
+                            test_probs[ngram_t] = 1 / (self.tokens_count + len(self.vocabulary))
 
         self.test_probs = test_probs
         return test_probs
@@ -344,10 +378,15 @@ if __name__ == '__main__':
                      ('food', '</s2>', '</s1>')]
 
     # Create a model object with the dictionaries above
-    modelObj = Model(train_example_ngrams, n_model=3)
+    modelObj = Model(train_example_ngrams, n_model=3, interpolation=True)
 
     # fit model to data
     modelObj.fit_model("laplace_smoothing")
+    pprint(modelObj.probs)
+    print()
+    pprint(modelObj.smoothed_probs)
+    print()
+    pprint(modelObj.interpolated_probs)
     # print()
     # print('Probs')
     # pprint(modelObj.probs)
@@ -360,18 +399,18 @@ if __name__ == '__main__':
     # modelObj.get_test_ngrams_smoothed_probs(test_ngram_tuples=test_trigrams)
     # pprint(modelObj.test_probs)
 
-    print("Model have been trained!")
-
-    word = input("Please type a word \n")
-
-    # predict
-    mle_dict = modelObj.mle_predict_word((word,))
-    print(mle_dict)
-
-    from Assignment1.evaluation import Evaluation
-
-    eval_obj = Evaluation(model_to_test=modelObj.test_probs,
-                          data_to_test=test_trigrams,
-                          tokens_count=modelObj.tokens_count)
-
-    pprint(eval_obj.compute_model_performance())
+    # print("Model have been trained!")
+    #
+    # word = input("Please type a word \n")
+    #
+    # # predict
+    # mle_dict = modelObj.mle_predict_word((word,))
+    # print(mle_dict)
+    #
+    # from Assignment1.evaluation import Evaluation
+    #
+    # eval_obj = Evaluation(model_to_test=modelObj.test_probs,
+    #                       data_to_test=test_trigrams,
+    #                       tokens_count=modelObj.tokens_count)
+    #
+    # pprint(eval_obj.compute_model_performance())
