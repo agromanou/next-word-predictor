@@ -1,7 +1,4 @@
-import numpy as np
 import math
-from pprint import pprint
-import random
 
 
 class Evaluation(object):
@@ -57,40 +54,6 @@ class Evaluation(object):
             total -= math.log(self.model[n_gram], 2)
 
         return total / len(self.data_to_test)
-
-    @staticmethod
-    def create_wrong_sentence(n_words, vocabulary):
-        """
-
-        :param n_words:
-        :param vocabulary:
-        :return:
-        """
-        sentence = list()
-
-        for words in range(n_words):
-            sentence.append(random.choice(vocabulary))
-
-        return sentence
-
-    def evaluate_on_sentences_pairs(self, sentences, vocabulary):
-        """
-
-        :param sentences:
-        :param vocabulary:
-        :return:
-        """
-
-        correct_sentence_tokens = random.choice(sentences)
-        correct_sentence_len = len(correct_sentence_tokens)
-
-        random_sentence_tokens = self.create_wrong_sentence(n_words=correct_sentence_len,
-                                                            vocabulary=vocabulary)
-
-        print(correct_sentence_tokens)
-        print(random_sentence_tokens)
-
-
 
 
 if __name__ == '__main__':
