@@ -105,7 +105,7 @@ class Model(object):
         lp = map(lambda ngram_tuple: (ngram_tuple,
                                       (self.model_ngrams.get(ngram_tuple, 0) + add_k) /
                                       (self.model_ngrams.get(ngram_tuple[:-1],
-                                                             self.tokens_count) + len(self.vocabulary))),
+                                                             self.tokens_count) + (add_k * len(self.vocabulary)))),
                  self.model_ngrams)
 
         return dict(lp)
@@ -202,6 +202,7 @@ class Model(object):
                         test_probs[ngram_t] = 1 / (self.tokens_count + len(self.vocabulary))
 
         self.test_probs = test_probs
+        return test_probs
 
 
 if __name__ == '__main__':
@@ -298,9 +299,9 @@ if __name__ == '__main__':
     print(mle_dict)
 
     from Assignment1.evaluation import Evaluation
-    #
-    # eval_obj = Evaluation(model_to_test=modelObj.smoothed_probs,
-    #                       data_to_test=test_ngrams,
-    #                       tokens_count=modelObj.tokens_count)
-    #
-    # pprint(eval_obj.compute_model_performance())
+
+    eval_obj = Evaluation(model_to_test=modelObj.test_probs,
+                          data_to_test=test_trigrams,
+                          tokens_count=modelObj.tokens_count)
+
+    pprint(eval_obj.compute_model_performance())

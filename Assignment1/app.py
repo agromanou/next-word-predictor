@@ -1,5 +1,3 @@
-import itertools
-
 import numpy as np
 
 from Assignment1.data_fetcher import Fetcher
@@ -40,7 +38,11 @@ def prepare_test_metadata(iterable_of_sentence_tokens, rejected_words, model_n, 
     return out, counter
 
 
-def run_example(mod_type='bigram', smoothing='laplace_smoothing', baselim=5, n_sentences=10000, n_folds=5):
+def run_example(mod_type='bigram',
+                smoothing='laplace_smoothing',
+                baselim=5,
+                n_sentences=10000,
+                n_folds=5):
     """
 
     :param mod_type:
@@ -89,34 +91,37 @@ def run_example(mod_type='bigram', smoothing='laplace_smoothing', baselim=5, n_s
                                                                                train_padded_sentences,
                                                                                base_limit=baselim)
 
-        dev_prepared_ngrams, test_unigrams_counter = prepare_test_metadata(
+        dev_prepared_ngrams, dev_unigrams_counter = prepare_test_metadata(
             iterable_of_sentence_tokens=dev_padded_sentences,
             rejected_words=rejected_tokens,
             model_n=model_n)
 
-        pprint(dev_prepared_ngrams)
-
-        model_obj = Model(model_ngrams=training_ngram_counts,
-                          n_model=model_n)
+        model_obj = Model(model_ngrams=training_ngram_counts, n_model=model_n)
 
         model_obj.fit_model(smoothing_algo=smoothing)
 
-        probs = model_obj.smoothed_probs
+        dev_probs = model_obj.get_test_ngrams_smoothed_probs(test_ngram_tuples=dev_prepared_ngrams)
 
-        eval_obj = Evaluation(probs, dev_prepared_ngrams, test_unigrams_counter)
+        eval_obj = Evaluation(model_to_test=dev_probs,
+                              data_to_test=dev_prepared_ngrams,
+                              tokens_count=dev_unigrams_counter)
 
         eval_obj.compute_model_performance()
+
         cross_entropy_res.append(eval_obj.cross_entropy)
         perplexity_res.append(eval_obj.perplexity)
 
     mean_cross_entropy = np.mean(cross_entropy_res)
     mean_perplexity = np.mean(perplexity_res)
 
+
+
     print('Avg Cross Entropy: ', mean_cross_entropy)
     print('Avg Perplexity: ', mean_perplexity)
 
 
 if __name__ == '__main__':
+
     mod_type = 'trigram'
     smoothing = 'laplace_smoothing'
     baselim = 10
