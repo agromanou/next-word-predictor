@@ -114,8 +114,6 @@ def run_example(mod_type='bigram',
     mean_cross_entropy = np.mean(cross_entropy_res)
     mean_perplexity = np.mean(perplexity_res)
 
-
-
     print('Avg Cross Entropy: ', mean_cross_entropy)
     print('Avg Perplexity: ', mean_perplexity)
 

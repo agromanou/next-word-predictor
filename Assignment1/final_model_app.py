@@ -13,8 +13,7 @@ logger = setup_logger(__name__)
 def run_final_model(mod_type='bigram',
                     smoothing='laplace_smoothing',
                     baselim=5,
-                    n_sentences=10000,
-                    n_folds=5):
+                    n_sentences=10000):
     """
 
     :param mod_type:
@@ -70,8 +69,8 @@ def run_final_model(mod_type='bigram',
 
     eval_obj.compute_model_performance()
 
-    logger.info('Avg Cross Entropy: ', eval_obj.cross_entropy)
-    logger.info('Avg Perplexity: ', eval_obj.perplexity)
+    logger.info('Avg Cross Entropy: {}'.format(eval_obj.cross_entropy))
+    logger.info('Avg Perplexity: {}'.format(eval_obj.perplexity))
 
     return {
         'model_obj': model_obj,
@@ -82,13 +81,22 @@ def run_final_model(mod_type='bigram',
 
 
 if __name__ == '__main__':
-    mod_type = 'trigram'
+    print("The model is trained. Please wait for you input...")
+    mod_type = 'bigram'
     smoothing = 'laplace_smoothing'
     baselim = 10
     nsentences = 10000
 
-    run_final_model(mod_type=mod_type,
-                    smoothing=smoothing,
-                    baselim=baselim,
-                    n_sentences=nsentences,
-                    n_folds=5)
+    obj = run_final_model(mod_type=mod_type,
+                          smoothing=smoothing,
+                          baselim=baselim,
+                          n_sentences=nsentences)
+
+    # Run keyword predictor
+    print("Model have been trained!")
+    word = input("Please type a word \n(To exit type the word: <exit>) \n\n")
+    while word != '<exit>':
+        mle_dict = obj['model_obj'].mle_predict_word((word,))
+        print(mle_dict)
+        word = input("Please type a word \n(To exit type the word: <exit>)\n\n ")
+

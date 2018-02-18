@@ -206,6 +206,7 @@ class Model(object):
 
 
 if __name__ == '__main__':
+    print("The model is trained. Please wait for you input...")
     # Test case with the following dictionaries
     tokens = ["<s>", "i", "want", "to", "eat", "chinese", "food", "lunch", "spend", "</s>",
               "<s>", "i", "want", "to", "eat", "chinese", "food", "lunch", "spend", "</s>",
@@ -283,19 +284,24 @@ if __name__ == '__main__':
 
     # fit model to data
     modelObj.fit_model("laplace_smoothing")
-    print()
-    print('Probs')
-    pprint(modelObj.probs)
-    print()
-    print('Smoothed')
-    pprint(modelObj.smoothed_probs)
-    print()
+    # print()
+    # print('Probs')
+    # pprint(modelObj.probs)
+    # print()
+    # print('Smoothed')
+    # pprint(modelObj.smoothed_probs)
+    # print()
+    #
+    # print('Checking test probs')
+    # modelObj.get_test_ngrams_smoothed_probs(test_ngram_tuples=test_trigrams)
+    # pprint(modelObj.test_probs)
 
-    print('Checking test probs')
-    modelObj.get_test_ngrams_smoothed_probs(test_ngram_tuples=test_trigrams)
-    pprint(modelObj.test_probs)
+    print("Model have been trained!")
+
+    word = input("Please type a word \n")
+
     # predict
-    mle_dict = modelObj.mle_predict_word(('to', 'eat'))
+    mle_dict = modelObj.mle_predict_word((word,))
     print(mle_dict)
 
     from Assignment1.evaluation import Evaluation
