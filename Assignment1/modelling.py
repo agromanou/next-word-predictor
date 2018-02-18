@@ -176,6 +176,33 @@ class Model(object):
 
         return sorted_ngams[:n_suggestions]
 
+    def get_test_ngrams_smoothed_probs(self, test_ngram_tuples):
+        """
+
+        :param test_ngram_tuples:
+        :return:
+        """
+        test_probs = dict()
+
+        for ngram_t in test_ngram_tuples:
+
+            if self.smoothed_probs.get(ngram_t):
+                test_probs[ngram_t] = self.smoothed_probs.get(ngram_t)
+
+            else:
+                if self.smoothed_probs.get(ngram_t[:-1]):
+
+                    test_probs[ngram_t] = 1 / (self.model_ngrams[ngram_t[:-1]] + len(self.vocabulary))
+                else:
+
+                    if self.smoothed_probs.get(ngram_t[:-2]):
+
+                        test_probs[ngram_t] = 1 / (self.model_ngrams[ngram_t[:-2]] + len(self.vocabulary))
+                    else:
+                        test_probs[ngram_t] = 1 / (self.tokens_count + len(self.vocabulary))
+
+        self.test_probs = test_probs
+
 
 if __name__ == '__main__':
     # Test case with the following dictionaries

@@ -94,7 +94,9 @@ def run_example(mod_type='bigram', smoothing='laplace_smoothing', baselim=5, n_s
             rejected_words=rejected_tokens,
             model_n=model_n)
 
-        model_obj = Model(ngrams=training_ngram_counts,
+        pprint(dev_prepared_ngrams)
+
+        model_obj = Model(model_ngrams=training_ngram_counts,
                           n_model=model_n)
 
         model_obj.fit_model(smoothing_algo=smoothing)
@@ -115,7 +117,7 @@ def run_example(mod_type='bigram', smoothing='laplace_smoothing', baselim=5, n_s
 
 
 if __name__ == '__main__':
-    mod_type = 'bigram'
+    mod_type = 'trigram'
     smoothing = 'laplace_smoothing'
     baselim = 10
     nsentences = 10000
