@@ -2,20 +2,28 @@ import numpy as np
 import operator
 from pprint import pprint
 from collections import defaultdict
+from Assignment1 import setup_logger
+
+logger = setup_logger(__name__)
 
 
 class Model(object):
-    def __init__(self, ngrams, n_model=2):
+    def __init__(self, model_ngrams, test_ngram_tuples, n_model=2):
         """
 
-        :param ngrams:
+        :param model_ngrams:
+        :param test_ngram_tuples:
         :param n_model:
         """
 
         self.n_model = n_model
-        self.ngrams = self.merge_ngram_counts(ngrams)
-        self.vocabulary = ngrams[1]  # will always be the 1-gram counts.
+        self.test_ngram_tuples = test_ngram_tuples
+
+        self.model_ngrams = self.merge_ngram_counts(model_ngrams)
+        self.vocabulary = model_ngrams[1]  # will always be the 1-gram counts.
+
         self.tokens_count = sum(self.vocabulary.values())
+
         self.probs = dict()
         self.smoothed_probs = dict()
         self.interpolated_probs = dict()
@@ -48,7 +56,6 @@ class Model(object):
         assert smoothing_algo in ['laplace_smoothing']
 
         self.probs = self.calculate_bayes_probs()
-        self.perform_smoothing(smoothing_algo)
         # self.linear_interpolation(l1=0.5, l2=0.3, l3=0.2)
         self.log_prob()
         self.mle()
@@ -61,11 +68,12 @@ class Model(object):
         :param voc: A dictionary with each unique word and their frequencies.
         :return: A dictionary with the bayes probabilities for each ngram tuple.
         """
-        return dict(
-            map(lambda ngram_tuple: (ngram_tuple,
-                                     self.ngrams[ngram_tuple] / self.vocabulary.get(ngram_tuple[:-1],
-                                                                                    self.tokens_count)),
-                self.ngrams))
+        pr = map(lambda ngram_tuple: (ngram_tuple,
+                                      self.model_ngrams[ngram_tuple] / self.model_ngrams.get(ngram_tuple[:-1],
+                                                                                             self.tokens_count)),
+                 self.model_ngrams)
+
+        return dict(pr)
 
     def perform_smoothing(self, smoothing_algo):
         """
@@ -75,28 +83,32 @@ class Model(object):
         :return:
         """
         if smoothing_algo == "laplace_smoothing":
-            print("Running Laplace smoothing process..")
+            logger.info("Running Laplace smoothing process..")
             self.smoothed_probs = self.laplace_smoothing()
 
         elif smoothing_algo == "k_n":
-            print("Running Kneser-Ney smoothing process..")
+            logger.info("Running Kneser-Ney smoothing process..")
             self.smoothed_probs = self.kneser_ney_smoothing()
 
         else:
-            print("Please choose a valid smoothing method.")
+            logger.warning("Please choose a valid smoothing method.")
 
     def laplace_smoothing(self, add_k=1):
         """
-        This method performs add-k smoothing algorithm. Be default the k is equal to 1
+        This method performs add-k smoothing algorithm. By default the k is equal to 1
         and thus it performs the Laplace smoothing algorithm.
-        :param add_k: The k param
-        :return: A dictionary with the smoothed probabilities for each ngram tuple
-        """
-        pl = dict(
-            map(lambda ngram_tuple: (ngram_tuple, (self.ngrams[ngram_tuple] + add_k) /
-                                     (self.vocabulary[(ngram_tuple[0],)] + len(self.vocabulary))), self.ngrams))
 
-        return pl
+        :param add_k: int. The k param
+        :return: A dictionary with the smoothed probabilities for each n-gram tuple
+        """
+
+        lp = map(lambda ngram_tuple: (ngram_tuple,
+                                      (self.model_ngrams.get(ngram_tuple, 0) + add_k) /
+                                      (self.model_ngrams.get(ngram_tuple[:-1],
+                                                             self.tokens_count) + len(self.vocabulary))),
+                 self.test_ngram_tuples)
+
+        return dict(lp)
 
     def kneser_ney_smoothing(self):
         """
@@ -156,8 +168,6 @@ class Model(object):
         next_words = dict()
         for ngram_tuple in self.probs:
             if ngram_tuple[:-1] == word_tuple:
-                print(word_tuple, ngram_tuple)
-
                 ending_tuple = ngram_tuple[len(word_tuple):]
 
                 next_words[ending_tuple] = self.probs[ngram_tuple]
@@ -208,18 +218,30 @@ if __name__ == '__main__':
                    ('spend', '</s>'): 1}
               }
 
+    test_ngram = [('<s>', 'i'),
+                  ('i', 'want'),
+                  ('want', 'to'),
+                  ('to', 'eat'),
+                  ('eat', 'greek'),
+                  ('greek', 'food'),
+                  ('food', '</s>')]
+
     # Create a model object with the dictionaries above
-    modelObj = Model(ngrams)
+    modelObj = Model(ngrams, test_ngram_tuples=test_ngram, n_model=2)
 
     # fit model to data
     modelObj.fit_model("laplace_smoothing")
-
+    print()
+    laplace = modelObj.laplace_smoothing(add_k=1)
+    pprint(laplace)
+    print()
     pprint(modelObj.probs)
     print()
     pprint(modelObj.smoothed_probs)
     print()
     pprint(modelObj.log_probs)
+    print()
 
-    # predict
+    predict
     mle_dict = modelObj.mle_predict_word(("eat",))
     print(mle_dict)
