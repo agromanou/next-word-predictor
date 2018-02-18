@@ -14,7 +14,8 @@ class Model(object):
 
         self.n_model = n_model
         self.ngrams = self.merge_ngram_counts(ngrams)
-
+        pprint(self.ngrams)
+        print()
         self.vocabulary = ngrams[1] # will always be the 1-gram counts.
         self.tokens_count = sum(self.vocabulary.values())
         self.probs = dict()
@@ -29,13 +30,13 @@ class Model(object):
 
         :return:
         """
-        super_dict = defaultdict(set)  # uses set to avoid duplicates
+        super_dict = defaultdict(int)  # uses set to avoid duplicates
 
         list_of_dicts = ngrams.values()
 
         for d in list_of_dicts:
             for k, v in d.items():
-                super_dict[k].add(v)
+                super_dict[k] = v
 
         return super_dict
 
@@ -63,8 +64,13 @@ class Model(object):
         :param voc: A dictionary with each unique word and their frequencies.
         :return: A dictionary with the bayes probabilities for each ngram tuple.
         """
+        for ngram_tuple in self.ngrams:
+            print(self.ngrams[ngram_tuple], self.vocabulary.get(ngram_tuple[:-1], self.tokens_count))
+
         return dict(
-            map(lambda ngram_tuple: (ngram_tuple, self.ngrams[ngram_tuple] / self.vocabulary[(ngram_tuple[:-1],)]),
+            map(lambda ngram_tuple: (ngram_tuple,
+                                     self.ngrams[ngram_tuple] / self.vocabulary.get(ngram_tuple[:-1],
+                                                                                    self.tokens_count)),
                 self.ngrams))
 
     def perform_smoothing(self, smoothing_algo):
