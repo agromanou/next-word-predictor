@@ -1,10 +1,12 @@
+from app import setup_logger
+from app.preprocess import Preprocessor
+from app.evaluation import Evaluation
+
+from collections import defaultdict
+from pprint import pprint
 import numpy as np
 import operator
-from pprint import pprint
-from collections import defaultdict
-from Assignment1 import setup_logger
 import random
-from Assignment1.preprocess import Preprocessor
 
 logger = setup_logger(__name__)
 
@@ -32,14 +34,13 @@ class Model(object):
         self.test_probs = dict()
         self.smoothed_probs = dict()
         self.interpolated_probs = dict()
-        self.log_probs = dict()
         self.trained_model = dict()
 
     @staticmethod
     def merge_ngram_counts(ngrams):
         """
-
-        :return:
+        Takes as input a nested dictionary and flattens it.
+        :return: A flattened dictionary
         """
         super_dict = defaultdict(int)  # uses set to avoid duplicates
 
@@ -56,7 +57,6 @@ class Model(object):
         This method runs the modeling process by calculating the Bayes probabilities
         and performing smoothing on the Models variables.
         :param smoothing_algo: The name of the smoothing algorithm that will be used.
-        :return:
         """
         assert smoothing_algo in ['laplace_smoothing', 'k_n']
 
@@ -67,7 +67,7 @@ class Model(object):
         self.perform_smoothing(smoothing_algo)
 
         if self.interpolation:
-            # perfoming interpolation
+            # performing interpolation
             self.interpolated_probs = self.linear_interpolation(l1=(1 / 3),
                                                                 l2=(1 / 3),
                                                                 l3=(1 / 3))
@@ -75,7 +75,7 @@ class Model(object):
     def calculate_bayes_probs(self):
         """
         This methods calculates the Bayes probability for each ngram using
-        the following equation: P(w2 | w1) = count(w1, w2) / count(w1).
+        the following equation: P(w_n | w_(n-k),..., w_(n-1)) = count(w_(n-k),.., w_n) / count(w_(n-k),..., w_(n-1))
 
         :return: A dictionary with the bayes probabilities for each ngram tuple.
         """
@@ -90,8 +90,7 @@ class Model(object):
         """
         This method handles smoothing process and calls a certain smoothing algorithm
         based on the given name.
-        :param smoothing_algo: A string with the name of the smoothing algorithm.
-        :return:
+        :param smoothing_algo: A string with the name of the smoothing algorithm that should be performed.
         """
         if smoothing_algo == "laplace_smoothing":
             logger.info("Running Laplace smoothing process...")
@@ -107,7 +106,6 @@ class Model(object):
         """
         This method performs add-k smoothing algorithm. By default the k is equal to 1
         and thus it performs the Laplace smoothing algorithm.
-
         :param add_k: int. The k param
         :return: A dictionary with the smoothed probabilities for each n-gram tuple
         """
@@ -122,9 +120,9 @@ class Model(object):
 
     def kneser_ney_smoothing(self, d):
         """
-
-        :param d:
-        :return:
+        This method performs Kneser-Ney smoothing algorithm. By default the discount value is set to 0.75.
+        :param d: The discount value of the algorithm.
+        :return: A dictionary with the smoothed probabilities for each n-gram tuple
         """
 
         if self.n_model == 2:
@@ -147,7 +145,7 @@ class Model(object):
 
                 l = (d * dict_values_count1) / dict_values_sum1
                 k_n = (max / (self.model_ngrams[ngram_t[:-1]])) + (
-                        (l * dict_values_count2) / len(self.model_ngrams_raw[2]))
+                    (l * dict_values_count2) / len(self.model_ngrams_raw[2]))
 
                 smoothed_probs_dict[ngram_t] = k_n
 
@@ -168,30 +166,29 @@ class Model(object):
                 dict_values2 = {v for t, v in self.model_ngrams_raw[3].items() if t[-2:] == ngram_t[:-1]}
                 dict_values_count2 = len(dict_values2)
 
-                if dict_values_count2 ==0 :
-                    dict_values_count2 +=1
+                if dict_values_count2 == 0:
+                    dict_values_count2 += 1
 
                 max = np.max(self.model_ngrams[ngram_t] - d, 0)
 
                 l = (d * dict_values_count1) / dict_values_sum1
                 k_n = (max / (self.model_ngrams[ngram_t[:-1]])) + (
-                        (l * dict_values_count2) / len(self.model_ngrams_raw[2]))
+                    (l * dict_values_count2) / len(self.model_ngrams_raw[2]))
 
                 smoothed_probs_dict[ngram_t] = k_n
-
-
 
         else:
             raise NotImplementedError('Sorry, next time!')
 
-        print('adsfasdfasf')
-        print(smoothed_probs_dict)
         return smoothed_probs_dict
 
     def linear_interpolation(self, l1, l2, l3):
         """
-
-        :return:
+        This method performs linear interpolation to the n-gram smoothed probabilities of the model.
+        :param l1: The weight l1
+        :param l2: The weight l2
+        :param l3: The weight l3
+        :return: A dictionary with the interpolated probabilities for each n-gram tuple
         """
         assert (l1 + l2 + l3 == 1)
 
@@ -201,66 +198,14 @@ class Model(object):
                                               l2 * self.smoothed_probs.get(ngram_t[:-1], 0),
                                               l1 * self.smoothed_probs.get(ngram_t[:-2], 0)])
 
-        # self.interpolated_probs = dict(map(lambda k: (
-        #         l1 * self.smoothed_probs[k] +
-        #         l2 * self.smoothed_probs[k] +
-        #         l3 * self.smoothed_probs[k]), self.smoothed_probs))
-
         return intepolated_probs
-
-    def log_prob(self):
-        """
-
-        :return: A dictionary with the logged probabilities for each ngram tuple
-        """
-        self.log_probs = dict(map(lambda k: (k, - np.log(self.smoothed_probs[k])), self.smoothed_probs))
-
-    def mle(self):
-        """
-        This method performs the Maximum Likelihood Estimation algorithm to the ngrams dictionary
-        and  keeps the ngram with the max prob for each word.
-        :return: A dictionary with the maximum probability for each word
-        """
-        for word in self.vocabulary.keys():
-            ngram_to_store = None
-            max_value = None
-            for ngram in self.smoothed_probs.keys():
-                if word == ngram[0]:
-                    if max_value is None:
-                        ngram_to_store = ngram
-                        max_value = self.smoothed_probs[ngram]
-
-                    elif max_value < self.smoothed_probs[ngram]:
-                        ngram_to_store = ngram
-                        max_value = self.smoothed_probs[ngram]
-
-            self.trained_model[ngram_to_store] = max_value
-
-    def mle_predict_word(self, word_tuple, n_suggestions=3):
-        """
-        This method performs the Maximum Likelihood Estimation algorithm and finds
-        the top N most likely words that will follow a given word.
-
-        :param word_tuple: The word we want to find the next one.
-        :param n_suggestions: int. The top N most probable words
-        :return: A dictionary with max 3 ordered probabilities and their respective words
-        """
-        next_words = dict()
-        for ngram_tuple in self.probs:
-            if ngram_tuple[:-1] == word_tuple:
-                ending_tuple = ngram_tuple[len(word_tuple):]
-
-                next_words[ending_tuple] = self.probs[ngram_tuple]
-
-        sorted_ngams = sorted(next_words.items(), key=operator.itemgetter(1), reverse=True)
-
-        return sorted_ngams[:n_suggestions]
 
     def get_test_ngrams_smoothed_probs(self, test_ngram_tuples):
         """
-
-        :param test_ngram_tuples:
-        :return:
+        This method performs smoothing on the n-grams from the test set. In that way, the zero probabilities of the
+        unknown/ new words from the test text, will have very low probability assigned to them.
+        :param test_ngram_tuples: A dictionary with the n-grams of the test set.
+        :return: A dictionary with the smoothed probabilities of the n-grams of the test set.
         """
         test_probs = dict()
 
@@ -306,9 +251,9 @@ class Model(object):
 
     def compute_sum_of_probability(self, ngrams):
         """
-
-        :param ngrams:
-        :return:
+        This method calculates the sum of log probabilities.
+        :param ngrams: A list with the n-grams
+        :return: The sum of log probabilities
         """
         sum_of_probs = -sum(map(np.log,
                                 self.get_test_ngrams_smoothed_probs(test_ngram_tuples=ngrams).values()))
@@ -317,11 +262,10 @@ class Model(object):
 
     def create_wrong_sentence(self, n_words, vocabulary):
         """
-
-        :param n_words:
-        :param vocabulary:
-        :param n_model:
-        :return:
+        This method creates a sentence of <n_word> length by randomly select words from a vocabulary.
+        :param n_words: The length of the produced random sentence.
+        :param vocabulary: The vocabulary pool that the sentence will be generated from.
+        :return: A list of tokens that in order they create the random sentence.
         """
 
         tokens = list()
@@ -336,10 +280,10 @@ class Model(object):
 
     def evaluate_on_sentences_pairs(self, sentence, vocabulary):
         """
-
-        :param sentences:
-        :param vocabulary:
-        :return:
+        This method takes a random sentence from the test data, creates a random sentence with the same length
+        and calculate the sum of log probabilities that our trained model assigns on them.
+        :param sentence: Correct sentence from the test set.
+        :param vocabulary: Vocabulary of the model.
         """
         filtered_correct = [t for t in sentence if t not in ['<s1>', '<s2>', '</s1>', '</s1>']]
 
@@ -366,26 +310,29 @@ class Model(object):
         logger.info('Random Sentence: "{}."'.format(' '.join(filtered_random).capitalize()))
         logger.info('Random Sentence Sum of Log Probs: {}.'.format(random_sum_of_log_probs))
 
+    def mle_predict_word(self, word_tuple, n_suggestions=3):
+        """
+        This method performs the Maximum Likelihood Estimation algorithm and finds
+        the top N most likely words that will follow a given word.
+
+        :param word_tuple: The word we want to find the next one.
+        :param n_suggestions: int. The top N most probable words
+        :return: A dictionary with max N ordered probabilities and their respective words
+        """
+        next_words = dict()
+        for ngram_tuple in self.probs:
+            if ngram_tuple[:-1] == word_tuple:
+                ending_tuple = ngram_tuple[len(word_tuple):]
+
+                next_words[ending_tuple] = self.probs[ngram_tuple]
+
+        sorted_ngams = sorted(next_words.items(), key=operator.itemgetter(1), reverse=True)
+
+        return sorted_ngams[:n_suggestions]
+
 
 if __name__ == '__main__':
     print("The model is trained. Please wait for you input...")
-
-    # Test case with the following dictionaries
-    tokens = ["<s>", "i", "want", "to", "eat", "chinese", "food", "lunch", "spend", "</s>",
-              "<s>", "i", "want", "to", "eat", "chinese", "food", "lunch", "spend", "</s>",
-              "<s>", "i", "want", "to", "eat", "chinese", "food", "lunch", "spend", "</s>",
-              "<s>", "i", "want", "to", "eat", "</s>"]
-
-    vocabulary_freq = {"i": 4,
-                       "want": 4,
-                       "to": 4,
-                       "eat": 4,
-                       "chinese": 3,
-                       "food": 3,
-                       "lunch": 3,
-                       "spend": 3,
-                       "<s>": 4,
-                       "</s>": 4}
 
     train_example_ngrams = {1: {('<s2>',): 4,
                                 ('i',): 4,
@@ -397,18 +344,16 @@ if __name__ == '__main__':
                                 ('lunch',): 1,
                                 ('spend',): 1,
                                 ('</s2>',): 4},
-                            2:
-                                {('<s2>', 'i'): 4,
-                                 ('i', 'want'): 4,
-                                 ('want', 'to'): 4,
-                                 ('to', 'eat'): 4,
-                                 ('eat', 'chinese'): 1,
-                                 ('eat', '</s2>'): 3,
-                                 ('chinese', 'food'): 1,
-                                 ('food', 'lunch'): 1,
-                                 ('lunch', 'spend'): 1,
-                                 ('spend', '</s2>'): 1},
-
+                            2: {('<s2>', 'i'): 4,
+                                ('i', 'want'): 4,
+                                ('want', 'to'): 4,
+                                ('to', 'eat'): 4,
+                                ('eat', 'chinese'): 1,
+                                ('eat', '</s2>'): 3,
+                                ('chinese', 'food'): 1,
+                                ('food', 'lunch'): 1,
+                                ('lunch', 'spend'): 1,
+                                ('spend', '</s2>'): 1},
                             3: {('<s1>', '<s2>', 'i'): 4,
                                 ('<s2>', 'i', 'want'): 4,
                                 ('i', 'want', 'to'): 4,
@@ -421,9 +366,7 @@ if __name__ == '__main__':
                                 ('lunch', 'spend', '</s2>'): 3,
                                 ('spend', '</s2>', '</s1>'): 3,
                                 ('eat', '</s2>', '</s1>'): 1,
-
-                                }
-                            }
+                                }}
 
     test_bigrams = [('<s>', 'i'),
                     ('i', 'want'),
@@ -443,40 +386,29 @@ if __name__ == '__main__':
                      ('food', '</s2>', '</s1>')]
 
     # Create a model object with the dictionaries above
-    modelObj = Model(train_example_ngrams, n_model=3, interpolation=False, kneser_ney_d=0.75)
+    modelObj = Model(train_example_ngrams, n_model=2, interpolation=True, kneser_ney_d=0.75)
 
-    # fit model to data
-    # modelObj.fit_model(smoothing_algo="laplace_smoothing")
+    # Fit model to data
     modelObj.fit_model(smoothing_algo="k_n")
+    print('Probs')
     pprint(modelObj.probs)
     print()
+    print('Smoothed')
     pprint(modelObj.smoothed_probs)
     print()
+    print('Interpolated')
     pprint(modelObj.interpolated_probs)
-    # print()
-    # print('Probs')
-    # pprint(modelObj.probs)
-    # print()
-    # print('Smoothed')
-    # pprint(modelObj.smoothed_probs)
-    # print()
-    #
-    # print('Checking test probs')
-    # modelObj.get_test_ngrams_smoothed_probs(test_ngram_tuples=test_trigrams)
-    # pprint(modelObj.test_probs)
+    print('-' * 100)
 
-    # print("Model have been trained!")
-    #
-    # word = input("Please type a word \n")
-    #
-    # # predict
-    # mle_dict = modelObj.mle_predict_word((word,))
-    # print(mle_dict)
-    #
-    # from Assignment1.evaluation import Evaluation
-    #
-    # eval_obj = Evaluation(model_to_test=modelObj.test_probs,
-    #                       data_to_test=test_trigrams,
-    #                       tokens_count=modelObj.tokens_count)
-    #
-    # pprint(eval_obj.compute_model_performance())
+    # Predict on test data
+    print('Test probs')
+    modelObj.get_test_ngrams_smoothed_probs(test_ngram_tuples=test_trigrams)
+    pprint(modelObj.test_probs)
+    print('-' * 100)
+
+    # Evaluate model
+    eval_obj = Evaluation(model_to_test=modelObj.test_probs,
+                          data_to_test=test_trigrams,
+                          tokens_count=modelObj.tokens_count)
+    print('Cross Entropy: {}'.format(np.round(eval_obj.compute_model_performance()['cross_entropy'], 3)))
+    print('Perplexity: {}'.format(np.round(eval_obj.compute_model_performance()['perplexity'], 3)))

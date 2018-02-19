@@ -1,7 +1,7 @@
+from app import setup_logger
+
 from collections import Counter
 from pprint import pprint
-from Assignment1 import setup_logger
-from nltk.tokenize import RegexpTokenizer
 
 import re
 
@@ -9,7 +9,6 @@ logger = setup_logger(__name__)
 
 
 class Preprocessor(object):
-
     def __init__(self):
         self.vocabulary = None
 
@@ -17,7 +16,6 @@ class Preprocessor(object):
     def split_to_sentences(corpus):
         """
         This method splits a corpus into sentences.
-
         :param corpus: str. A textual corpus.
         :return: List. An iterable of sentences (strings).
         """
@@ -33,19 +31,9 @@ class Preprocessor(object):
         return filtered
 
     @staticmethod
-    def flatten_ton_one_corpus(sentences):
-        """
-
-        :param sentences:
-        :return:
-        """
-        return '. '.join(sentences)
-
-    @staticmethod
     def tokenize_and_pad(sentence, model_type='simple'):
         """
         This method splits a sentence into tokens. Padding is added if necessary according the model type.
-
         :param sentence: str.
         :param model_type: str. Enum of bigram, trigram, simple
 
@@ -66,74 +54,12 @@ class Preprocessor(object):
             start = ['<s1>', '<s2>']
             end = ['</s2>', '</s1>']
 
-        # start = ['<s{}>'.format(i) for i in range(1, mapper.get(model_type))]
-        # end = ['</s{}>'.format(i) for i in reversed(range(1, mapper.get(model_type)))]
-
         return start + sentence.split() + end
-
-    @staticmethod
-    def create_vocabulary(tokens, base_limit=0):
-        """
-        This method counts all the tokens from a list of sentences. Then it creates a vocabulary with the most common
-        tokens, that surpass the base limit and a rejection vocabulary for the rest.
-
-        :param tokens: list. A list of strings.
-        :param base_limit: int. A number defining the base limit for the validity of the tokens.
-        :return: dict. A dictionary with the vocabulary and the rejected tokens
-        """
-
-        logger.info('Creating Vocabulary with base_limit: {}'.format(base_limit))
-
-        # # grab all the tokens in an iterator. Not in a list.
-        # tokens = (token for sentence in sentences for token in self.tokenize_and_pad(sentence, model_type='simple'))
-
-        tokens_count = Counter(tokens)
-
-        # selecting the valid tokens, and the rejected tokens in separate dictionaries.
-        valid_tokens = {k: v for k, v in tokens_count.items() if v > base_limit}
-        invalid_tokens = {k: v for k, v in tokens_count.items() if v <= base_limit}
-
-        logger.info('Valid Vocabulary size: {}'.format(len(valid_tokens)))
-        logger.info('Rejection Vocabulary size: {}'.format(len(invalid_tokens)))
-
-        return valid_tokens, invalid_tokens
-
-    @staticmethod
-    def replace_uncommon_words(corpus, words, replacement='<UNK>'):
-        """
-
-        :param corpus:
-        :param words:
-        :param replacement:
-        :return:
-        """
-
-        altered_corpus = corpus
-
-        for w in words:
-            altered_corpus = re.sub(r'\b({})\b'.format(w),
-                                    replacement,
-                                    altered_corpus)
-
-        return altered_corpus
-
-    @staticmethod
-    def tokenize_corpus(corpus):
-        """
-
-        :param corpus:
-        :return:
-        """
-        tokenizer = RegexpTokenizer(r'\w+')
-        tokens = tokenizer.tokenize(corpus.lower())
-
-        return tokens
 
     @staticmethod
     def create_ngrams(seq, n):
         """
         This method creates a list of n-grams from a given sentence.
-
         :param seq: The given sentence.
         :param n: The length of word tuples
         :return: The n-grams for a given sentence.
@@ -144,11 +70,10 @@ class Preprocessor(object):
 
     def create_ngram_metadata(self, model, list_of_tokens, threshold):
         """
-
-        :param model:
-        :param list_of_tokens:
-        :param threshold:
-        :return:
+        Runs the process for n_gram creation.
+        :param model: string. The n-gram model (bi-gram or tri-gram)
+        :param list_of_tokens: Tokens of the corpus
+        :param threshold: int. The minimum number of appearances for a word to consider as valid.
         """
         assert model in ['bigram', 'trigram']
         logger.info('Running Model: {}'.format(model.title()))
@@ -184,7 +109,7 @@ class Preprocessor(object):
 
         final_counts = dict({i: {} for i in range(1, model_n + 1)})
 
-        replacement="<UNK>"
+        replacement = "<UNK>"
 
         logger.info('Replacing Rejection words with {}'.format(replacement))
 
@@ -222,6 +147,11 @@ if __name__ == '__main__':
                "The Cape sparrow's population has not decreased significantly, and is not " \
                "seriously threatened by human activities. "
 
-    test_counts = Preprocessor().tokenize_and_pad(sentence=a_corpus, model_type='bigram')
+    pre_obj = Preprocessor()
+    sentences = pre_obj.split_to_sentences(a_corpus)
+    padded_sentences = [pre_obj.tokenize_and_pad(s, 'bigram') for s in sentences]
+    n_grams, rejected = pre_obj.create_ngram_metadata(model='bigram',
+                                                      list_of_tokens=padded_sentences,
+                                                      threshold=1)
 
-    pprint(test_counts)
+    pprint(n_grams)
