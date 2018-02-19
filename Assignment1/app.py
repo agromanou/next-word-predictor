@@ -37,12 +37,12 @@ def prepare_test_metadata(iterable_of_sentence_tokens, rejected_words, model_n, 
     return out, counter
 
 
-def run_example(mod_type='bigram',
-                smoothing='laplace_smoothing',
-                threshold=5,
-                n_sentences=10000,
-                n_folds=5,
-                interpolation=False):
+def main(mod_type='bigram',
+         smoothing='laplace_smoothing',
+         threshold=5,
+         n_sentences=10000,
+         n_folds=5,
+         interpolation=False):
     """
 
     :param mod_type:
@@ -59,7 +59,7 @@ def run_example(mod_type='bigram',
                 ' Smoothing Type: {1},'
                 ' Vocabulary Base Limit: {2},'
                 ' Number of Sentences: {3},'
-                ' Interpolation: {}.'.format(
+                ' Interpolation: {4}.'.format(
         mod_type.title(), smoothing.title(), threshold, n_sentences, interpolation))
 
     dl_obj = Fetcher(file='europarl-v7.el-en.', language='en')
@@ -88,7 +88,6 @@ def run_example(mod_type='bigram',
     for fold in dl_obj.feed_cross_validation(sentences=dl_obj.train_data,
                                              seed=1234,
                                              k_folds=n_folds):
-
         # getting the two data-sets, train and held-out.
         train_padded_sentences = fold["train"]
         dev_padded_sentences = fold['held_out']
@@ -136,14 +135,13 @@ def run_example(mod_type='bigram',
 
 
 if __name__ == '__main__':
-
-    mod_type = 'trigram'
+    mod_type = 'bigram'
     smoothing = 'laplace_smoothing'
-    baselim = 10
+    baselim = 8
     nsentences = 10000
 
-    run_example(mod_type=mod_type,
-                smoothing=smoothing,
-                threshold=baselim,
-                n_sentences=nsentences,
-                n_folds=5)
+    main(mod_type=mod_type,
+         smoothing=smoothing,
+         threshold=baselim,
+         n_sentences=nsentences,
+         n_folds=5)

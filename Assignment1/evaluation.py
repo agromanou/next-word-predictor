@@ -1,4 +1,5 @@
 import math
+import numpy as np
 
 
 class Evaluation(object):
@@ -6,8 +7,8 @@ class Evaluation(object):
     def __init__(self, model_to_test, data_to_test, tokens_count):
         """
         This class is responsible for the evaluation of the language model.
-        :param model_to_test:
-        :param data_to_test:
+        :param model_to_test: A dictionary with the probabilities for each ngram.
+        :param data_to_test: The n-gram frequencies of the data that the medel is tested on.
         """
         self.tokens_count = tokens_count
         self.model = model_to_test
@@ -18,8 +19,8 @@ class Evaluation(object):
 
     def compute_model_performance(self):
         """
-
-        :return:
+        The method is responsible for calculating the metrics regarding model performance.
+        :return: A dictionary with the evaluation metrics stored
         """
         cross_entropy = self.compute_cross_entropy()
         perplexity = self.compute_perplexity(cross_entropy)
@@ -30,28 +31,26 @@ class Evaluation(object):
         return dict(cross_entropy=cross_entropy,
                     perplexity=perplexity)
 
-    def compute_perplexity(self, cross_entropy):
-        """
-        This method computes the perplexity for a given test dataset.
-
-        :return:
-        """
-
-        return math.pow(2, cross_entropy)
-
     def compute_cross_entropy(self):
         """
         This method computes the cross entropy for a given test dataset.
         CE = sum( p(i,j) * log2(p(j|i)) ) =
         count(i,j) / count(all_bigrams) * log2( count(i, j) / count(count(i)))
-
-        :return:
+        :return: The cross entropy metric
         """
         total = 0
         for n_gram in self.data_to_test:
             total -= math.log(self.model[n_gram], 2)
 
         return total / len(self.data_to_test)
+
+    def compute_perplexity(self, cross_entropy):
+        """
+        This method computes the perplexity metric.
+        :return: The perplexity metric.
+        """
+
+        return math.pow(2, cross_entropy)
 
 
 if __name__ == '__main__':
@@ -82,5 +81,7 @@ if __name__ == '__main__':
              ('i', 'want'): 0.043478260869565216,
              ('food', 'lunch'): 0.043478260869565216}
 
-    eval_obj = Evaluation(model, ngrams_test)
-    print(eval_obj.compute_model_performance())
+    eval_obj = Evaluation(model, ngrams_test, len(tokens_test))
+
+    print('Cross Entropy: {}'.format(np.round(eval_obj.compute_model_performance()['cross_entropy'], 3)))
+    print('Perplexity: {}'.format(np.round(eval_obj.compute_model_performance()['perplexity'], 3)))
