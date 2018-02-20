@@ -20,7 +20,6 @@ def run_final_model(mod_type='bigram',
                     interpolation=False,
                     kneser_ney_d=0.75,
                     laplace_k=1):
-
     """
 
     :param mod_type:
@@ -109,37 +108,68 @@ def run_final_model(mod_type='bigram',
     }
 
 
-if __name__ == '__main__':
+def keyboard(smoothing='laplace_smoothing',
+             threshold=10,
+             n_sentences=20000,
+             interpolation=False):
+    """
+
+    :param smoothing:
+    :param threshold:
+    :param n_sentences:
+    :param interpolation:
+    :return:
+    """
+
+    ngram_setting = 0
+    while ngram_setting not in [2, 3]:
+
+        try:
+            ngram_setting = int(input('Please select the n-gram setting. \n'
+                                      '(Note that you can only set 2 or 3 as n-gram setting) \n '
+                                      '\nN-gram setting: '))
+        except ValueError:
+            ngram_setting = 0
 
     print("The model is being trained. Please wait for you input...")
-    mod_type = 'bigram'
-    smoothing = 'laplace_smoothing'
-    baselim = 10
-    nsentences = 10000
 
-    obj = run_final_model(mod_type=mod_type,
+    mapper = {2: 'bigram', 3: 'trigram'}
+
+    obj = run_final_model(mod_type=mapper.get(ngram_setting),
                           smoothing=smoothing,
-                          threshold=baselim,
-                          n_sentences=nsentences,
-                          n_random_sentences_check=5,
-                          interpolation=False)
+                          threshold=threshold,
+                          n_sentences=n_sentences,
+                          n_random_sentences_check=0,
+                          interpolation=interpolation)
 
     # Run keyword predictor
     print("Model have been trained!")
-    ngram_setting = int(input('Please select the n-gram setting. \n'
-                              '(Note that you can only set 2 or 3 as n-gram setting) \n \nN-gram setting: '))
+
     seq = input('We are all set! '
                 'Now please type a word or a sequence or any text you like! :) \n'
                 '(To exit type the word: <exit>) \n\n')
 
+    token_endings_mapper = {i: '.' for i in ['</s2>', '</s1>']}
+
     while seq != '<exit>':
-        tokens = tuple(seq.split())
+
+        tokens = tuple(seq.lower().strip().split())
+
         mle_dict = obj['model_obj'].mle_predict_word(tokens[-(ngram_setting - 1):])
+
         print('Next three most probable words:')
+
         for element in mle_dict:
-            print('{} : {}'.format(element[0][0], np.round(element[1], 3)))
+            transformed = token_endings_mapper.get(element[0][0], element[0][0])
+
+            print(' "{}" : {}'.format(transformed, np.round(element[1], 3)))
+
         print('\n')
 
         seq = input("We are all set! "
                     "Now please type a word a sequence of any text you like! \n"
                     "(To exit type the word: <exit>) \n\n")
+
+
+if __name__ == '__main__':
+    keyboard()
